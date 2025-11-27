@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>YouBike 借/還車預測 Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- React 18 CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <style>
+    body { font-family: system-ui, Arial; padding: 24px; max-width: 720px; margin: auto; }
+    label { display:block; margin-top:12px; font-weight:600; }
+    input, select { width: 100%; padding: 8px; margin-top: 6px; }
+    button { margin-top:16px; padding:10px 16px; font-weight:600; }
+    .card { border:1px solid #ddd; border-radius:12px; padding:16px; margin-top:16px; }
+  </style>
+</head>
+<body>
+  <h2>YouBike 借/還車量預測</h2>
+  <div id="root"></div>
+
+  <script>
+    const e = React.createElement;
+
+    function App(){
+      const [stations, setStations] = React.useState([]);
+      const [stationId, setStationId] = React.useState("");
+      const [dt, setDt] = React.useState(new Date().toISOString().slice(0,16)); // yyyy-MM-ddTHH:mm
+      const [rain, setRain] = React.useState(0);
+      const [isRain, setIsRain] = React.useState(0);
+      const [temp, setTemp] = React.useState(26.0);
+      const [result, setResult] = React.useState(null);
+      const [loading, setLoading] = React.useState(false);
+
+      React.useEffect(()=>{
+        fetch("/stations").then(r=>r.json()).then(list=>{
+          setStations(list);
+          if(list.length){ setStationId(String(list[0].station_id)); }
+        });
+      },[]);
+
+      async function predict(){
+        if(!stationId){ alert("請選擇站點"); return; }
+        setLoading(true);
+        try{
+          const body = {
+            station_id: Number(stationId),
+            dt: new Date(dt).toISOString(),
+            rain_mm: Number(rain),
+            is_rain: Number(isRain),
+            temp_c: Number(temp),
+          };
+          const r = await fetch("/predict_one", {
+            method: "POST",
+            headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify(body)
+          });
+          const j = await r.json();
+          setResult(j);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      return e("div", null,
+        e("label", null, "站點"),
+        e("select", { value: stationId, onChange: e=>setStationId(e.target.value) },
+          stations.map(s => e("option", { key:s.station_id, value:s.station_id },
+            `${s.station_name}（${s.district}｜ID:${s.station_id}｜柱:${s.docks_total}）`
+          ))
+        ),
+
+        e("label", null, "時間"),
+        e("input", { type:"datetime-local", value:dt, onChange: e=>setDt(e.target.value) }),
+
+        e("label", null, "rain_mm（每小時降雨量 mm）"),
+        e("input", { type:"number", step:"0.1", value:rain, onChange: e=>setRain(e.target.value) }),
+
+        e("label", null, "is_rain（是否下雨 0/1）"),
+        e("select", { value:isRain, onChange: e=>setIsRain(e.target.value) },
+          e("option", { value:0 }, "否"),
+          e("option", { value:1 }, "是")
+        ),
+
+        e("label", null, "temp_c（氣溫 °C）"),
+        e("input", { type:"number", step:"0.1", value:temp, onChange: e=>setTemp(e.target.value) }),
+
+        e("button", { onClick:predict, disabled:loading }, loading ? "預測中..." : "預測"),
+
+        result && e("div", { className:"card" },
+          e("div", null, `預測借車數：${(result.rent_pred ?? 0).toFixed(2)}`),
+          e("div", null, `預測還車數：${(result.return_pred ?? 0).toFixed(2)}`)
+        )
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(e(App));
+  </script>
+</body>
+</html>

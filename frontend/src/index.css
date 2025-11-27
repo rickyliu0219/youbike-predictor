@@ -1,0 +1,105 @@
+
+/* 1) 啟用 Tailwind */
+@import "tailwindcss";
+
+/* 2) 輕量自訂（不與 Tailwind 打架） */
+:root {
+  /* 只留字體與抗鋸齒設定；顏色/背景交給 Tailwind class 控制 */
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* 3) 取消原本會「整頁置中」的規則，避免把整個 App 擠到畫面中央 */
+html, body, #root {
+  height: 100%;
+}
+body {
+  margin: 0;
+}
+
+/* 4) 連結的基礎樣式（可保留，也可直接用 Tailwind 的 text-類別） */
+a {
+  text-decoration: none;
+}
+
+/* 5) 卡片 / 玻璃擬態 / 動畫微互動（配合我給你的 React 版面使用） */
+.card {
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 1rem; /* ≈ rounded-2xl */
+}
+
+.glass {
+  background: linear-gradient(180deg, rgba(30, 41, 59, .6), rgba(2, 6, 23, .6));
+  backdrop-filter: blur(10px);
+}
+
+/* KPI 小彈跳 */
+.pop { animation: pop .5s cubic-bezier(.2, .7, .2, 1); }
+@keyframes pop {
+  from { transform: scale(.98); opacity: 0 }
+  to   { transform: scale(1);   opacity: 1 }
+}
+
+/* 按鈕按壓態（不覆蓋 Tailwind，只是補充） */
+.press:active { transform: scale(.98) }
+
+/* === Tooltip：分開為日間 / 夜間，避免日間變黑底黑字 === */
+.theme-light .recharts-default-tooltip {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important; /* gray-200 */
+  border-radius: 12px !important;
+  color: #111827 !important; /* gray-900 */
+  box-shadow: 0 8px 24px rgba(0,0,0,.08) !important;
+}
+.theme-dark .recharts-default-tooltip {
+  background: #0b1220 !important;
+  border: 1px solid rgba(255,255,255,.1) !important;
+  border-radius: 12px !important;
+  color: #e5e7eb !important; /* slate-200 */
+  box-shadow: 0 8px 24px rgba(0,0,0,.40) !important;
+}
+
+/* === 如果你的圓環上有數值小方框，建議加上 'donut-badge' 類別 === */
+.theme-light .donut-badge {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #e5e7eb !important;
+}
+.theme-dark .donut-badge {
+  background: rgba(15,23,42,.95) !important; /* slate-900/95 */
+  color: #e5e7eb !important;
+  border: 1px solid #334155 !important; /* slate-700 */
+}
+
+/* ===== Strong geometric network background ===== */
+@keyframes drift-left  { 0%{transform:translateX(-2%)} 50%{transform:translateX(1%)} 100%{transform:translateX(-2%)} }
+@keyframes drift-right { 0%{transform:translateX( 2%)} 50%{transform:translateX(-1%)} 100%{transform:translateX( 2%)} }
+
+.bg-neutral-grad{
+  background-image: radial-gradient(1200px 700px at 50% 40%, #ffffff 0%, #f5f7fb 55%, #eef1f6 100%);
+}
+
+.center-scrim{
+  background: radial-gradient(700px 420px at 50% 42%,
+             rgba(255,255,255,0.90) 0%, rgba(255,255,255,0.75) 40%,
+             rgba(255,255,255,0.40) 70%, rgba(255,255,255,0.10) 100%);
+}
+
+.animate-left  { animation: drift-left  28s ease-in-out infinite; }
+.animate-right { animation: drift-right 28s ease-in-out infinite; }
+
+/* 玻璃卡片（維持原本液態玻璃質感） */
+.glass-card{
+  background: rgba(255,255,255,0.38);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border:1px solid rgba(0,0,0,0.06);
+  border-radius:22px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.12);
+}
+.station-select option {
+  background-color: #ffffff;
+  color: #000000;
+}
