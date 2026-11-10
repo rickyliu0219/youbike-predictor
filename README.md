@@ -1,18 +1,11 @@
 <div align="center">
 
-# 🚲 YouBike Predictor
+# YouBike Predictor
 
 **Taipei YouBike 2.0 hourly rental / return forecasting with machine learning**<br>
 **台北市 YouBike 2.0 站點借還車量預測系統**
 
-🏆 3rd Place — 18th Information Education Conference (第十八屆資訊教育研討會 第三名)
-
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-RandomForest-F7931E?logo=scikitlearn&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
-![Tailwind](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white)
+Python · FastAPI · scikit-learn (RandomForest) · React 19 · Vite · Tailwind CSS 4 · Leaflet
 
 <img src="docs/screenshot-light.png" width="100%" alt="Dashboard (light mode · Lapland theme)">
 
@@ -28,20 +21,20 @@
 
 ## Features｜功能
 
-| | EN | 中文 |
-|---|---|---|
-| 📡 | Live bikes / empty docks / capacity per station | 即時可借車數、可停車格、總容量 |
-| 📈 | Hourly forecast for today / tomorrow / the day after | 今日、明日、後日逐小時預測 |
-| 🕒 | Timeline slider: sky panel changes with time of day, shows that hour's prediction | 時間軸滑桿：天空面板隨時段變色，顯示該小時預測值 |
-| 🔋 | Remaining-bike simulation bounded by dock capacity | 依車柱容量上下限推算剩餘車數 |
-| 🌧️ | Weather what-if: presets + rain / temperature sliders | 天氣情境模擬（晴天／陰天／霧天／雨天／大雨＋滑桿） |
-| ⚠️ | Stock-out & full-station risk levels | 缺車／滿車風險等級 |
-| 🌱 | CO₂ savings estimate vs scooter / car | 相較機車、汽車的 CO₂ 減量估算 |
-| ⭐ | Favorite stations (saved in browser) | 常用站點（存在瀏覽器） |
-| 🌗 | Light (Nordic · Lapland) / dark (warm charcoal · London) themes with animated scenes | 日間（北歐・拉普蘭雪國）／夜間（暖炭・倫敦夜景）主題與動畫場景 |
-| 🔎 | Themed station picker: search, district chips, favorites first, keyboard nav | 主題化站點選單：搜尋、行政區篩選、常用置頂、鍵盤操作 |
-| 🗺️ | Station map with nearby stations and one-tap Google Maps navigation | 站點地圖、周邊站點、一鍵 Google 地圖導航 |
-| 🛟 | Falls back to local CSV / heuristic if API or model is unavailable | API 或模型不可用時自動改用本地資料／經驗公式 |
+| EN | 中文 |
+|---|---|
+| Live bikes / empty docks / capacity per station | 即時可借車數、可停車格、總容量 |
+| Hourly forecast for today / tomorrow / the day after | 今日、明日、後日逐小時預測 |
+| Timeline slider: sky panel changes with time of day, shows that hour's prediction | 時間軸滑桿：天空面板隨時段變色，顯示該小時預測值 |
+| Remaining-bike simulation bounded by dock capacity | 依車柱容量上下限推算剩餘車數 |
+| Weather what-if: presets + rain / temperature sliders | 天氣情境模擬（晴天／陰天／霧天／雨天／大雨＋滑桿） |
+| Stock-out & full-station risk levels | 缺車／滿車風險等級 |
+| CO₂ savings estimate vs scooter / car | 相較機車、汽車的 CO₂ 減量估算 |
+| Favorite stations (saved in browser) | 常用站點（存在瀏覽器） |
+| Light (Nordic · Lapland) / dark (warm charcoal · London) themes with animated scenes | 日間（北歐・拉普蘭雪國）／夜間（暖炭・倫敦夜景）主題與動畫場景 |
+| Themed station picker: search, district chips, favorites first, keyboard nav | 主題化站點選單：搜尋、行政區篩選、常用置頂、鍵盤操作 |
+| Station map with nearby stations and one-tap Google Maps navigation | 站點地圖、周邊站點、一鍵 Google 地圖導航 |
+| Falls back to local CSV / heuristic if API or model is unavailable | API 或模型不可用時自動改用本地資料／經驗公式 |
 
 <img src="docs/screenshot-dark.png" width="100%" alt="Dashboard (dark mode · London theme)">
 
@@ -99,7 +92,7 @@ cd backend && uvicorn main:app --port 8000        # → http://127.0.0.1:8000
 ## API
 
 | Method | Path | Description 說明 |
-|---|---|---|
+|---|---|
 | GET | `/health` | Health check, model loaded? 健康檢查 |
 | GET | `/stations?source=api\|csv` | Station list 站點清單 |
 | GET | `/realtime/{station_id}` | Live status of one station 單站即時資料 |
