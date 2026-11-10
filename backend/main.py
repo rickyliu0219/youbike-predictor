@@ -156,6 +156,7 @@ def _fetch_realtime_rows() -> List[Dict]:
             "lat": float(r.get("latitude") or 0.0),
             "lon": float(r.get("longitude") or 0.0),
             "update_time": r.get("updateTime") or r.get("mday") or "",
+            "address": r.get("ar") or "",
         })
 
     # 寫入快取
@@ -382,6 +383,7 @@ def stations(source: Optional[str] = "api"):
                 "docks_total": r["docks_total"],
                 "lat": r["lat"],
                 "lon": r["lon"],
+                "address": r["address"],
             })
         # 排序：行政區、站名
         out.sort(key=lambda x: (x["district"], x["station_name"]))

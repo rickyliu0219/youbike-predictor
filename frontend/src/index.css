@@ -251,3 +251,34 @@ a {
 .yl-sub    { color: var(--l-sub); }
 .yl-accent { color: var(--l-accent); }
 .theme-light .recharts-default-tooltip { background: var(--l-card) !important; border-color: var(--l-border) !important; color: var(--l-text) !important; }
+
+/* =============================================================
+   下拉面板／地圖
+   ============================================================= */
+/* 面板展開：由上方淡入放大 */
+.yb-pop-panel { animation: yb-panel .22s cubic-bezier(.2,.8,.2,1); transform-origin: top center; }
+@keyframes yb-panel { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+.yb-fade { animation: yb-fadein .2s ease-out; }
+@keyframes yb-fadein { from { opacity: 0; } to { opacity: 1; } }
+.yb-row { transition: background-color .12s ease; }
+
+/* 主題化捲軸 */
+.yb-scroll { scrollbar-width: thin; }
+.theme-light .yb-scroll { scrollbar-color: var(--l-border) transparent; }
+.theme-dark  .yb-scroll { scrollbar-color: rgba(255,255,255,.15) transparent; }
+.yb-scroll::-webkit-scrollbar { width: 8px; }
+.yb-scroll::-webkit-scrollbar-thumb { border-radius: 8px; background: rgba(128,128,128,.3); }
+/* 行政區晶片列：隱藏捲軸 */
+.yb-chips { scrollbar-width: none; }
+.yb-chips::-webkit-scrollbar { display: none; }
+
+/* 地圖底圖濾鏡：讓 CARTO 底圖色調貼近主題 */
+.yb-map-light .leaflet-tile-pane { filter: saturate(.6) sepia(.08); }
+.yb-map-dark  .leaflet-tile-pane { filter: sepia(.35) saturate(.7) brightness(1.05); }
+.leaflet-container { font-family: inherit; background: transparent; }
+.yb-pin { background: none; border: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); }
+.theme-dark .leaflet-tooltip { background: var(--d-card); color: var(--d-text); border-color: var(--d-border); }
+.theme-dark .leaflet-tooltip-top:before { border-top-color: var(--d-card); }
+.theme-dark .leaflet-control-zoom a { background: var(--d-card); color: var(--d-text); border-color: var(--d-border); }
+.theme-dark .leaflet-control-attribution { background: rgba(0,0,0,.4); color: #aaa; }
+.theme-dark .leaflet-control-attribution a { color: #ccc; }

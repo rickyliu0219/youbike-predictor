@@ -3,9 +3,9 @@
 // YouBike 機器學習預測系統 — 前端主畫面（React + Tailwind + Recharts）
 //
 // 版面：
-//   左欄：常用站點、站點選擇（搜尋／行政區篩選）、天氣設定、時間視窗
+//   左欄：常用站點、站點選擇（自訂下拉，含搜尋／行政區）、天氣設定、時間設定
 //   中欄：即時狀態（可借／可停／容量）、逐小時預測折線圖、時段統計長條圖
-//   右欄：缺車／滿車風險、CO₂ 減量估算、站點資訊
+//   右欄：缺車／滿車風險、CO₂ 減量估算、站點資訊、站點地圖（一鍵導航）
 //
 // 資料流：
 //   1. 載入時 GET /stations 取得站點清單
@@ -18,6 +18,9 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
 import { Clock, MapPin, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar, Sun, CloudFog, CloudRain, CloudLightning, Moon, Sunrise, Sunset } from "lucide-react";
+import StationPicker from "./components/StationPicker";
+import { shortName } from "./utils";
+import StationMap from "./components/StationMap";
 
 // ---------- 常數與小工具 ----------
 const API = "/api";                                   // 後端 API 前綴（經 Vite 代理）
@@ -152,19 +155,19 @@ function Logo({ isDark }) {
 // ---------- 夜間模式配色 ----------
 // 所有夜間顏色集中在這裡；換配色只要改 DEFAULT_DARK（或網址加 ?dark=名稱 預覽）
 const DARK_PALETTES = {
-  graphite: { name: "石墨灰", bg1: "#141416", bg2: "#1c1c1f", card: "#1f2023", border: "rgba(255,255,255,0.08)",
+  graphite: { name: "石墨灰", risk: ["#8a8a91","#b4b4ba","#e4e4e7"], bg1: "#141416", bg2: "#1c1c1f", card: "#1f2023", border: "rgba(255,255,255,0.08)",
               input: "#26272b", soft: "rgba(255,255,255,0.05)", header: "rgba(20,20,22,0.82)",
               text: "#ececee", sub: "#9a9aa1", accent: "#d4d4d8",
               rent: "#e4e4e7", ret: "#8b8b93", remain: "#5f5f66", grid: "#2b2c30", axis: "#8a8a91", tooltip: "#202124" },
-  midnight: { name: "霧藍午夜", bg1: "#0e131c", bg2: "#151c28", card: "#18202d", border: "rgba(148,163,184,0.12)",
+  midnight: { name: "霧藍午夜", risk: ["#7fa3a0","#c7a76f","#c27a78"], bg1: "#0e131c", bg2: "#151c28", card: "#18202d", border: "rgba(148,163,184,0.12)",
               input: "#1e2736", soft: "rgba(143,176,214,0.07)", header: "rgba(14,19,28,0.82)",
               text: "#e2e8f0", sub: "#8a96a8", accent: "#8fb0d6",
               rent: "#a9c3e2", ret: "#5d7898", remain: "#6b7484", grid: "#243042", axis: "#7d8899", tooltip: "#18202d" },
-  warm:     { name: "暖炭", bg1: "#151311", bg2: "#1d1a17", card: "#221f1c", border: "rgba(255,240,220,0.08)",
+  warm:     { name: "暖炭", risk: ["#9aa77d","#d9a56a","#c76a55"], bg1: "#151311", bg2: "#1d1a17", card: "#221f1c", border: "rgba(255,240,220,0.08)",
               input: "#2a2622", soft: "rgba(217,165,106,0.07)", header: "rgba(21,19,17,0.82)",
               text: "#ede6dd", sub: "#a39a8f", accent: "#d9a56a",
               rent: "#e0b07a", ret: "#8c7a66", remain: "#6b635a", grid: "#302b26", axis: "#8f857a", tooltip: "#24201d" },
-  forest:   { name: "墨綠", bg1: "#0f1412", bg2: "#151c19", card: "#1a221f", border: "rgba(200,230,215,0.08)",
+  forest:   { name: "墨綠", risk: ["#8cbfa3","#cdb27a","#c27a68"], bg1: "#0f1412", bg2: "#151c19", card: "#1a221f", border: "rgba(200,230,215,0.08)",
               input: "#212a26", soft: "rgba(140,191,163,0.07)", header: "rgba(15,20,18,0.82)",
               text: "#e3ebe6", sub: "#8fa199", accent: "#8cbfa3",
               rent: "#a3cfb6", ret: "#5e8574", remain: "#66706b", grid: "#25302b", axis: "#85948d", tooltip: "#1a221f" },
@@ -178,43 +181,43 @@ const darkVars = (p) => ({
 // ---------- 日間模式配色 ----------
 // 換配色改 DEFAULT_LIGHT，或網址加 ?light=名稱 預覽
 const LIGHT_PALETTES = {
-  mono:  { name: "純白灰", bg1: "#f9fafb", bg2: "#f3f4f6", card: "#ffffff", border: "#e5e7eb", input: "#ffffff",
+  mono:  { name: "純白灰", risk: ["#9ca3af","#6b7280","#111827"], bg1: "#f9fafb", bg2: "#f3f4f6", card: "#ffffff", border: "#e5e7eb", input: "#ffffff",
            soft: "#f3f4f6", header: "rgba(255,255,255,0.85)", text: "#111827", sub: "#6b7280", accent: "#1f2937",
            tile: "#f3f3f3", tileOn: "#fafafa", tileEdge: "#9ca3af",
            rent: "#111827", ret: "#6b7280", remain: "#9ca3af", grid: "#e5e7eb", axis: "#111827" },
-  cream: { name: "奶油米", bg1: "#f7f4ef", bg2: "#efeae2", card: "#fffdf9", border: "#ebe4d9", input: "#fffdf9",
+  cream: { name: "奶油米", risk: ["#b8c4a0","#d4a86a","#b5654a"], bg1: "#f7f4ef", bg2: "#efeae2", card: "#fffdf9", border: "#ebe4d9", input: "#fffdf9",
            soft: "#f4efe7", header: "rgba(250,247,242,0.88)", text: "#2b2622", sub: "#857a6f", accent: "#b07a3f",
            tile: "#f3eee6", tileOn: "#fffaf2", tileEdge: "#c9a77c",
            rent: "#b07a3f", ret: "#a39788", remain: "#cfc6ba", grid: "#ece5da", axis: "#6f655b" },
-  mist:  { name: "霧藍白", bg1: "#f3f6f9", bg2: "#e9eef3", card: "#ffffff", border: "#e1e7ee", input: "#ffffff",
+  mist:  { name: "霧藍白", risk: ["#9fbcd6","#d1b07a","#b86a6a"], bg1: "#f3f6f9", bg2: "#e9eef3", card: "#ffffff", border: "#e1e7ee", input: "#ffffff",
            soft: "#eef2f6", header: "rgba(247,249,251,0.88)", text: "#1e2a36", sub: "#66768a", accent: "#4f7cac",
            tile: "#edf1f5", tileOn: "#f9fbfd", tileEdge: "#8fa9c6",
            rent: "#4f7cac", ret: "#9aabbd", remain: "#c4cfdb", grid: "#e3e9ef", axis: "#5a6878" },
-  sage:  { name: "鼠尾草", bg1: "#f4f6f2", bg2: "#eaeee7", card: "#fcfdfb", border: "#e1e7de", input: "#fcfdfb",
+  sage:  { name: "鼠尾草", risk: ["#a3c1ae","#cfb27a","#b5705f"], bg1: "#f4f6f2", bg2: "#eaeee7", card: "#fcfdfb", border: "#e1e7de", input: "#fcfdfb",
            soft: "#eef2ec", header: "rgba(246,248,244,0.88)", text: "#222a25", sub: "#6b7a70", accent: "#5e8d74",
            tile: "#edf1eb", tileOn: "#fafcf9", tileEdge: "#93b3a0",
            rent: "#5e8d74", ret: "#a4b3a9", remain: "#c9d3cc", grid: "#e3e9e0", axis: "#5f6b63" },
-  hawaii:   { name: "夏威夷", bg1: "#fbf6ec", bg2: "#f3ebdc", card: "#fffdf8", border: "#efe4d0", input: "#fffdf8",
+  hawaii:   { name: "夏威夷", risk: ["#7fb8ae","#efb27f","#e8705a"], bg1: "#fbf6ec", bg2: "#f3ebdc", card: "#fffdf8", border: "#efe4d0", input: "#fffdf8",
               soft: "#f6efe2", header: "rgba(251,246,236,0.88)", text: "#1f3a3a", sub: "#6e7f7b", accent: "#e8705a",
               tile: "#f5ede0", tileOn: "#fffaf1", tileEdge: "#e8a08f",
               rent: "#e8705a", ret: "#3a9a8f", remain: "#c9bfae", grid: "#efe6d6", axis: "#55706c" },
-  santorini:{ name: "聖托里尼", bg1: "#f6f8fb", bg2: "#e9eef6", card: "#ffffff", border: "#dfe6f1", input: "#ffffff",
+  santorini:{ name: "聖托里尼", risk: ["#9fb7da","#d4a84f","#b9584c"], bg1: "#f6f8fb", bg2: "#e9eef6", card: "#ffffff", border: "#dfe6f1", input: "#ffffff",
               soft: "#eef2f9", header: "rgba(246,248,251,0.88)", text: "#16294a", sub: "#64738c", accent: "#2f5fa7",
               tile: "#edf1f8", tileOn: "#fbfcfe", tileEdge: "#8ea8d4",
               rent: "#2f5fa7", ret: "#d4a84f", remain: "#c3cddd", grid: "#e2e8f2", axis: "#4f5f7a" },
-  kyoto:    { name: "京都和風", bg1: "#f6f2e9", bg2: "#ede7da", card: "#fcfaf4", border: "#e6dfd0", input: "#fcfaf4",
+  kyoto:    { name: "京都和風", risk: ["#9aa77a","#d0a35c","#b9503a"], bg1: "#f6f2e9", bg2: "#ede7da", card: "#fcfaf4", border: "#e6dfd0", input: "#fcfaf4",
               soft: "#f2ede2", header: "rgba(246,242,233,0.88)", text: "#2a2826", sub: "#7b756b", accent: "#b9503a",
               tile: "#f1ebdf", tileOn: "#fdfbf6", tileEdge: "#cf9283",
               rent: "#b9503a", ret: "#7d8b5a", remain: "#cbc4b6", grid: "#e9e2d4", axis: "#5e584f" },
-  nordic:   { name: "北歐", bg1: "#f5f5f2", bg2: "#ebebe6", card: "#fdfdfb", border: "#e3e3dd", input: "#fdfdfb",
+  nordic:   { name: "北歐", risk: ["#9bb0a2","#c9ad84","#b4675c"], bg1: "#f5f5f2", bg2: "#ebebe6", card: "#fdfdfb", border: "#e3e3dd", input: "#fdfdfb",
               soft: "#f0f0ec", header: "rgba(245,245,242,0.88)", text: "#24292e", sub: "#737a80", accent: "#5b7083",
               tile: "#efefea", tileOn: "#fcfcfa", tileEdge: "#a3b1bd",
               rent: "#5b7083", ret: "#c4ae8c", remain: "#cfd3d6", grid: "#e6e6e0", axis: "#5c6268" },
-  provence: { name: "普羅旺斯", bg1: "#f8f6f3", bg2: "#efebe6", card: "#fefdfb", border: "#e8e3dc", input: "#fefdfb",
+  provence: { name: "普羅旺斯", risk: ["#a8b07c","#c7a96e","#a7586e"], bg1: "#f8f6f3", bg2: "#efebe6", card: "#fefdfb", border: "#e8e3dc", input: "#fefdfb",
               soft: "#f3f0eb", header: "rgba(248,246,243,0.88)", text: "#2d2a33", sub: "#79737f", accent: "#7c6fae",
               tile: "#f2eee9", tileOn: "#fdfcfa", tileEdge: "#b3aad3",
               rent: "#7c6fae", ret: "#9aa36b", remain: "#d0cbd4", grid: "#ebe6df", axis: "#5f5966" },
-  marrakech:{ name: "摩洛哥", bg1: "#f8f1e7", bg2: "#efe3d2", card: "#fffaf3", border: "#ecdcc6", input: "#fffaf3",
+  marrakech:{ name: "摩洛哥", risk: ["#a9b07a","#d4a24a","#b3502f"], bg1: "#f8f1e7", bg2: "#efe3d2", card: "#fffaf3", border: "#ecdcc6", input: "#fffaf3",
               soft: "#f5ebdd", header: "rgba(248,241,231,0.88)", text: "#3a2a22", sub: "#86705f", accent: "#c0663f",
               tile: "#f3e8d8", tileOn: "#fffaf2", tileEdge: "#d9a088",
               rent: "#c0663f", ret: "#d4a24a", remain: "#d6c6b0", grid: "#eee0cc", axis: "#6d584a" },
@@ -390,8 +393,6 @@ export default function App() {
   }, []);
   const [stations, setStations] = useState([]);        // 全部站點清單
   const [stationId, setStationId] = useState("");      // 目前選取的站點
-  const [searchText, setSearchText] = useState("");    // 站名／站號搜尋字
-  const [districtFilter, setDistrictFilter] = useState("全部");
   const [now, setNow] = useState(() => new Date());                // 即時時鐘（每 20 秒更新）
   const [simHour, setSimHour] = useState(() => new Date().getHours()); // 時間軸選到的小時（0–23）
   // 天氣條件（送給後端當模型特徵）
@@ -429,7 +430,6 @@ export default function App() {
     });
   }, [stations]);
 
-  const isFav = (id) => favorites.includes(String(id));
   const toggleFav = (id) => {
     setFavorites(prev => {
       const s = new Set(prev.map(String));
@@ -469,35 +469,13 @@ export default function App() {
     })();
   }, []);
 
-  const districts = useMemo(
-    () => ["全部", ...Array.from(new Set((stations || []).map(s => s.district).filter(Boolean))).sort()],
-    [stations]
-  );
-
-  // 依行政區 + 關鍵字篩選站點
-  const filteredStations = useMemo(() => {
-    const q = searchText.trim().toLowerCase();
-    return (stations || []).filter((s) => {
-      const okD = districtFilter === "全部" || s.district === districtFilter;
-      const okQ = !q || String(s.station_name || "").toLowerCase().includes(q) || String(s.station_id).includes(q);
-      return okD && okQ;
-    });
-  }, [stations, searchText, districtFilter]);
-
-  // 置頂常用於下拉
-  const orderedStations = useMemo(() => {
-    const favSet = new Set(favorites);
-    const favs = filteredStations.filter(s => favSet.has(String(s.station_id)));
-    const others = filteredStations.filter(s => !favSet.has(String(s.station_id)));
-    return [...favs, ...others];
-  }, [filteredStations, favorites]);
-
-  // 篩選後若目前站點不在清單內，自動改選第一個
+  // 站點清單載入後，若目前沒有選到有效站點，自動選第一個（常用優先）
   useEffect(() => {
-    if (!orderedStations.length) return;
-    const exist = orderedStations.some(s => String(s.station_id) === String(stationId));
-    if (!exist) setStationId(String(orderedStations[0].station_id));
-  }, [orderedStations, stationId]);
+    if (!stations.length) return;
+    if (stations.some((s) => String(s.station_id) === String(stationId))) return;
+    const first = stations.find((s) => favorites.includes(String(s.station_id))) || stations[0];
+    setStationId(String(first.station_id));
+  }, [stations, stationId, favorites]);
 
   // 降雨量 > 0 就視為下雨（is_rain 是模型特徵之一）
   useEffect(() => {
@@ -677,7 +655,6 @@ export default function App() {
   const textPrimary = isDarkMode ? "yd-text" : "yl-text";
   const textSecondary = isDarkMode ? "yd-sub" : "yl-sub";
   const accentColor = isDarkMode ? "yd-accent" : "yl-accent";
-  const inputBg = isDarkMode ? "yd-input" : "yl-input";
 
   // 圖表顏色（日間黑灰；夜間取自配色）
   const chartStroke = {
@@ -732,11 +709,11 @@ export default function App() {
       };
 
   // === 風險條顏色：低=綠 / 中=橙 / 高=紅（支援日/夜） ===
-  const riskBarClass = (level) => {
+  // 顏色取自目前主題的 risk: [低, 中, 高]，低飽和、與主題同色系
+  const riskColor = (level) => {
+    const [lo, mid, hi] = (isDarkMode ? pal : lpal).risk;
     const lv = String(level || "").trim();
-    if (lv === "高") return isDarkMode ? "bg-red-400" : "bg-red-500";
-    if (lv === "中") return isDarkMode ? "bg-amber-400" : "bg-amber-500";
-    return isDarkMode ? "bg-green-400" : "bg-green-500"; // 低
+    return lv === "高" ? hi : lv === "中" ? mid : lo;
   };
 
   return (
@@ -797,41 +774,9 @@ export default function App() {
                 <MapPin className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'yl-accent'}`} />
                 <h3 className="font-bold text-sm">站點選擇</h3>
               </div>
-              <div className="space-y-3">
-                <input type="text" placeholder="搜尋..." value={searchText} onChange={(e) => setSearchText(e.target.value)}
-                  className={`w-full px-3 py-2 text-sm rounded-xl border ${inputBg} ${textPrimary}`} />
-                <select value={districtFilter} onChange={(e) => setDistrictFilter(e.target.value)}
-                  className={`w-full px-3 py-2 text-sm rounded-xl border ${inputBg} ${textPrimary}`}
-                  style={{ color: isDarkMode ? 'white' : 'black' }}>
-                  {districts.map((d) => <option key={d} value={d} style={{ color: 'black', backgroundColor: 'white' }}>{d}</option>)}
-                </select>
-
-                {/* 下拉 + ⭐ */}
-                <div className="flex gap-2 items-center">
-                  <select
-                    value={stationId}
-                    onChange={(e) => setStationId(e.target.value)}
-                    className={`station-select w-full px-3 py-2 text-sm rounded-xl border ${inputBg} ${textPrimary}`}
-                  >
-                    {orderedStations.map((s) => (
-                      <option key={s.station_id} value={s.station_id}>
-                        {isFav(s.station_id) ? "★ " : ""}{s.station_name}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => toggleFav(stationId)}
-                    title={isFav(stationId) ? "從常用移除" : "加入常用"}
-                    className={`neu-press shrink-0 px-3 py-2 rounded-xl border
-                      ${isDarkMode ? 'yd-soft yd-border' : 'yl-soft yl-border'}`}
-                  >
-                    <span className={`text-lg ${isFav(stationId) ? (isDarkMode ? 'text-yellow-300' : 'text-yellow-500') : (isDarkMode ? 'yd-sub' : 'yl-sub')}`}>
-                      ★
-                    </span>
-                  </button>
-                </div>
-              </div>
+              {/* 自訂下拉選單：清單也會套用主題配色（見 components/StationPicker.jsx） */}
+              <StationPicker isDark={isDarkMode} stations={stations} value={stationId} onChange={setStationId}
+                favorites={favorites} onToggleFav={toggleFav} />
             </div>
 
             <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
@@ -1006,7 +951,7 @@ export default function App() {
                       <span className="text-lg font-bold">{risk.stockout.level}</span>
                     </div>
                     <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'yd-soft' : 'yl-soft'}`}>
-                      <div className={`h-full ${riskBarClass(risk.stockout.level)}`} style={{ width: `${risk.stockout.score * 100}%` }} />
+                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${risk.stockout.score * 100}%`, background: riskColor(risk.stockout.level) }} />
                     </div>
                   </div>
                   <div>
@@ -1015,7 +960,7 @@ export default function App() {
                       <span className="text-lg font-bold">{risk.full.level}</span>
                     </div>
                     <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'yd-soft' : 'yl-soft'}`}>
-                      <div className={`h-full ${riskBarClass(risk.full.level)}`} style={{ width: `${risk.full.score * 100}%` }} />
+                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${risk.full.score * 100}%`, background: riskColor(risk.full.level) }} />
                     </div>
                   </div>
                 </div>
@@ -1056,7 +1001,7 @@ export default function App() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className={textSecondary}>站點名稱</span>
-                    <span className="font-medium">{selectedStation.station_name}</span>
+                    <span className="font-medium">{shortName(selectedStation.station_name)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className={textSecondary}>行政區</span>
@@ -1068,6 +1013,12 @@ export default function App() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* 站點位置地圖 + 一鍵導航（見 components/StationMap.jsx） */}
+            {selectedStation && (
+              <StationMap isDark={isDarkMode} station={selectedStation} stations={stations}
+                onSelect={setStationId} accent={isDarkMode ? pal.accent : lpal.accent} />
             )}
           </div>
         </div>
