@@ -47,7 +47,7 @@
   <text class="s" x="830" y="318" text-anchor="middle">hourly / rain / temp CSV</text>
 
   <path class="ln" d="M230,185 L330,185"/>
-  <text class="l" x="280" y="176" text-anchor="middle">/api/*</text>
+  <text class="l" x="280" y="176" text-anchor="middle">API</text>
   <path class="ln" d="M330,225 L230,225"/>
   <text class="l" x="280" y="243" text-anchor="middle">JSON</text>
   <path class="ln" d="M720,125 L608,138"/>
