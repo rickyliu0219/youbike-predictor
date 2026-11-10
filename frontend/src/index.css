@@ -237,3 +237,17 @@ a {
 .yd-sub    { color: var(--d-sub); }
 .yd-accent { color: var(--d-accent); }
 .theme-dark .recharts-default-tooltip { background: var(--d-card) !important; border-color: var(--d-border) !important; }
+
+/* =============================================================
+   日間配色類別：顏色來自 App.jsx 的 LIGHT_PALETTES（以 CSS 變數注入）
+   ============================================================= */
+.yl-bg     { background: linear-gradient(135deg, var(--l-bg1), var(--l-bg2) 55%, var(--l-bg1)); }
+.yl-card   { background: var(--l-card); border-color: var(--l-border); }
+.yl-header { background: var(--l-header); }
+.yl-input  { background: var(--l-input); border-color: var(--l-border); }
+.yl-soft   { background: var(--l-soft); }
+.yl-border { border-color: var(--l-border); }
+.yl-text   { color: var(--l-text); }
+.yl-sub    { color: var(--l-sub); }
+.yl-accent { color: var(--l-accent); }
+.theme-light .recharts-default-tooltip { background: var(--l-card) !important; border-color: var(--l-border) !important; color: var(--l-text) !important; }

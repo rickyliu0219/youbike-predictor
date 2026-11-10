@@ -112,8 +112,8 @@ function ThemeToggle({ isDark, onToggle }) {
 // "YouBike" 的 o 換成一個帶輻條的車輪，左側速度線表示「移動中」；
 // 滑鼠移到 logo 上時車輪會轉動（.yb-wheel 動畫寫在 index.css）
 function Logo({ isDark }) {
-  const ink = isDark ? "#f8fafc" : "#111827";
-  const sub = isDark ? "#94a3b8" : "#6b7280";
+  const ink = isDark ? "var(--d-text)" : "var(--l-text)";
+  const sub = isDark ? "var(--d-sub)" : "var(--l-sub)";
   const accent = "#f5a524";                 // 車輪與速度線的強調色（日夜模式共用）
   return (
     <div className="yb-logo flex items-center gap-3 select-none" aria-label="YouBike 需求預測">
@@ -137,7 +137,7 @@ function Logo({ isDark }) {
             <line x1="5.6" y1="5.6" x2="18.4" y2="18.4" />
             <line x1="18.4" y1="5.6" x2="5.6" y2="18.4" />
           </g>
-          <circle cx="12" cy="12" r="2.6" fill={ink} />
+          <circle cx="12" cy="12" r="2.6" style={{ fill: ink }} />
         </svg>
         <span className="text-[26px] font-black tracking-tight">uBike</span>
       </div>
@@ -173,6 +173,56 @@ const DEFAULT_DARK = "warm";   // 選定：暖炭
 const darkVars = (p) => ({
   "--d-bg1": p.bg1, "--d-bg2": p.bg2, "--d-card": p.card, "--d-border": p.border, "--d-input": p.input,
   "--d-soft": p.soft, "--d-header": p.header, "--d-text": p.text, "--d-sub": p.sub, "--d-accent": p.accent,
+});
+
+// ---------- 日間模式配色 ----------
+// 換配色改 DEFAULT_LIGHT，或網址加 ?light=名稱 預覽
+const LIGHT_PALETTES = {
+  mono:  { name: "純白灰", bg1: "#f9fafb", bg2: "#f3f4f6", card: "#ffffff", border: "#e5e7eb", input: "#ffffff",
+           soft: "#f3f4f6", header: "rgba(255,255,255,0.85)", text: "#111827", sub: "#6b7280", accent: "#1f2937",
+           tile: "#f3f3f3", tileOn: "#fafafa", tileEdge: "#9ca3af",
+           rent: "#111827", ret: "#6b7280", remain: "#9ca3af", grid: "#e5e7eb", axis: "#111827" },
+  cream: { name: "奶油米", bg1: "#f7f4ef", bg2: "#efeae2", card: "#fffdf9", border: "#ebe4d9", input: "#fffdf9",
+           soft: "#f4efe7", header: "rgba(250,247,242,0.88)", text: "#2b2622", sub: "#857a6f", accent: "#b07a3f",
+           tile: "#f3eee6", tileOn: "#fffaf2", tileEdge: "#c9a77c",
+           rent: "#b07a3f", ret: "#a39788", remain: "#cfc6ba", grid: "#ece5da", axis: "#6f655b" },
+  mist:  { name: "霧藍白", bg1: "#f3f6f9", bg2: "#e9eef3", card: "#ffffff", border: "#e1e7ee", input: "#ffffff",
+           soft: "#eef2f6", header: "rgba(247,249,251,0.88)", text: "#1e2a36", sub: "#66768a", accent: "#4f7cac",
+           tile: "#edf1f5", tileOn: "#f9fbfd", tileEdge: "#8fa9c6",
+           rent: "#4f7cac", ret: "#9aabbd", remain: "#c4cfdb", grid: "#e3e9ef", axis: "#5a6878" },
+  sage:  { name: "鼠尾草", bg1: "#f4f6f2", bg2: "#eaeee7", card: "#fcfdfb", border: "#e1e7de", input: "#fcfdfb",
+           soft: "#eef2ec", header: "rgba(246,248,244,0.88)", text: "#222a25", sub: "#6b7a70", accent: "#5e8d74",
+           tile: "#edf1eb", tileOn: "#fafcf9", tileEdge: "#93b3a0",
+           rent: "#5e8d74", ret: "#a4b3a9", remain: "#c9d3cc", grid: "#e3e9e0", axis: "#5f6b63" },
+  hawaii:   { name: "夏威夷", bg1: "#fbf6ec", bg2: "#f3ebdc", card: "#fffdf8", border: "#efe4d0", input: "#fffdf8",
+              soft: "#f6efe2", header: "rgba(251,246,236,0.88)", text: "#1f3a3a", sub: "#6e7f7b", accent: "#e8705a",
+              tile: "#f5ede0", tileOn: "#fffaf1", tileEdge: "#e8a08f",
+              rent: "#e8705a", ret: "#3a9a8f", remain: "#c9bfae", grid: "#efe6d6", axis: "#55706c" },
+  santorini:{ name: "聖托里尼", bg1: "#f6f8fb", bg2: "#e9eef6", card: "#ffffff", border: "#dfe6f1", input: "#ffffff",
+              soft: "#eef2f9", header: "rgba(246,248,251,0.88)", text: "#16294a", sub: "#64738c", accent: "#2f5fa7",
+              tile: "#edf1f8", tileOn: "#fbfcfe", tileEdge: "#8ea8d4",
+              rent: "#2f5fa7", ret: "#d4a84f", remain: "#c3cddd", grid: "#e2e8f2", axis: "#4f5f7a" },
+  kyoto:    { name: "京都和風", bg1: "#f6f2e9", bg2: "#ede7da", card: "#fcfaf4", border: "#e6dfd0", input: "#fcfaf4",
+              soft: "#f2ede2", header: "rgba(246,242,233,0.88)", text: "#2a2826", sub: "#7b756b", accent: "#b9503a",
+              tile: "#f1ebdf", tileOn: "#fdfbf6", tileEdge: "#cf9283",
+              rent: "#b9503a", ret: "#7d8b5a", remain: "#cbc4b6", grid: "#e9e2d4", axis: "#5e584f" },
+  nordic:   { name: "北歐", bg1: "#f5f5f2", bg2: "#ebebe6", card: "#fdfdfb", border: "#e3e3dd", input: "#fdfdfb",
+              soft: "#f0f0ec", header: "rgba(245,245,242,0.88)", text: "#24292e", sub: "#737a80", accent: "#5b7083",
+              tile: "#efefea", tileOn: "#fcfcfa", tileEdge: "#a3b1bd",
+              rent: "#5b7083", ret: "#c4ae8c", remain: "#cfd3d6", grid: "#e6e6e0", axis: "#5c6268" },
+  provence: { name: "普羅旺斯", bg1: "#f8f6f3", bg2: "#efebe6", card: "#fefdfb", border: "#e8e3dc", input: "#fefdfb",
+              soft: "#f3f0eb", header: "rgba(248,246,243,0.88)", text: "#2d2a33", sub: "#79737f", accent: "#7c6fae",
+              tile: "#f2eee9", tileOn: "#fdfcfa", tileEdge: "#b3aad3",
+              rent: "#7c6fae", ret: "#9aa36b", remain: "#d0cbd4", grid: "#ebe6df", axis: "#5f5966" },
+  marrakech:{ name: "摩洛哥", bg1: "#f8f1e7", bg2: "#efe3d2", card: "#fffaf3", border: "#ecdcc6", input: "#fffaf3",
+              soft: "#f5ebdd", header: "rgba(248,241,231,0.88)", text: "#3a2a22", sub: "#86705f", accent: "#c0663f",
+              tile: "#f3e8d8", tileOn: "#fffaf2", tileEdge: "#d9a088",
+              rent: "#c0663f", ret: "#d4a24a", remain: "#d6c6b0", grid: "#eee0cc", axis: "#6d584a" },
+};
+const DEFAULT_LIGHT = "nordic";   // 選定：北歐
+const lightVars = (p) => ({
+  "--l-bg1": p.bg1, "--l-bg2": p.bg2, "--l-card": p.card, "--l-border": p.border, "--l-input": p.input,
+  "--l-soft": p.soft, "--l-header": p.header, "--l-text": p.text, "--l-sub": p.sub, "--l-accent": p.accent,
 });
 
 // ---------- 時間軸：依小時決定時段名稱、天空顏色與圖示 ----------
@@ -212,7 +262,7 @@ function TimeCard({ isDark, cardClass, neuTile, now, view, setView, hour, setHou
       {/* 標題列：右側是即時時鐘，點擊可跳回「現在」 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Calendar className={`w-5 h-5 ${isDark ? "yd-accent" : "text-gray-800"}`} />
+          <Calendar className={`w-5 h-5 ${isDark ? "yd-accent" : "yl-accent"}`} />
           <h3 className="font-bold text-sm">時間設定</h3>
         </div>
         <button
@@ -246,7 +296,7 @@ function TimeCard({ isDark, cardClass, neuTile, now, view, setView, hour, setHou
         className="relative overflow-hidden rounded-2xl px-4 py-3.5"
         style={{
           backgroundColor: isDark ? period.dark : period.light,
-          color: isDark ? "#e5e7eb" : "#1f2937",
+          color: isDark ? "#e5e7eb" : "var(--l-text)",
           transition: "background-color .7s ease",
           // 與天氣卡片一致的擬物內凹感
           border: `1.5px solid ${isDark ? "rgba(255,255,255,.10)" : "#ffffff"}`,
@@ -333,6 +383,10 @@ export default function App() {
   const pal = useMemo(() => {
     const q = new URLSearchParams(window.location.search).get("dark");
     return DARK_PALETTES[q] || DARK_PALETTES[DEFAULT_DARK];
+  }, []);
+  const lpal = useMemo(() => {
+    const q = new URLSearchParams(window.location.search).get("light");
+    return LIGHT_PALETTES[q] || LIGHT_PALETTES[DEFAULT_LIGHT];
   }, []);
   const [stations, setStations] = useState([]);        // 全部站點清單
   const [stationId, setStationId] = useState("");      // 目前選取的站點
@@ -618,41 +672,41 @@ export default function App() {
   ] : [];
 
   // ====== 主題樣式（日間＝黑白灰；夜間＝DARK_PALETTES 中選定的配色，CSS 類別定義在 index.css） ======
-  const bgClass = isDarkMode ? "yd-bg" : "bg-gradient-to-br from-gray-50 via-gray-100 to-white";
-  const cardClass = isDarkMode ? "yd-card" : "bg-white border-gray-200";
-  const textPrimary = isDarkMode ? "yd-text" : "text-gray-900";
-  const textSecondary = isDarkMode ? "yd-sub" : "text-gray-600";
-  const accentColor = isDarkMode ? "yd-accent" : "text-gray-900";
-  const inputBg = isDarkMode ? "yd-input" : "bg-white border-gray-300";
+  const bgClass = isDarkMode ? "yd-bg" : "yl-bg";
+  const cardClass = isDarkMode ? "yd-card" : "yl-card";
+  const textPrimary = isDarkMode ? "yd-text" : "yl-text";
+  const textSecondary = isDarkMode ? "yd-sub" : "yl-sub";
+  const accentColor = isDarkMode ? "yd-accent" : "yl-accent";
+  const inputBg = isDarkMode ? "yd-input" : "yl-input";
 
   // 圖表顏色（日間黑灰；夜間取自配色）
   const chartStroke = {
-    axis: isDarkMode ? pal.axis : "#111827",
-    grid: isDarkMode ? pal.grid : "#e5e7eb",
-    rent: isDarkMode ? pal.rent : "#111827",
-    ret: isDarkMode ? pal.ret : "#6b7280",
-    remain: isDarkMode ? pal.remain : "#9ca3af",
-    barRent: isDarkMode ? pal.rent : "#111827",
-    barRet: isDarkMode ? pal.ret : "#6b7280",
-    pieUse: isDarkMode ? pal.rent : "#111827",
-    pieSlot: isDarkMode ? pal.grid : "#d1d5db",
+    axis: isDarkMode ? pal.axis : lpal.axis,
+    grid: isDarkMode ? pal.grid : lpal.grid,
+    rent: isDarkMode ? pal.rent : lpal.rent,
+    ret: isDarkMode ? pal.ret : lpal.ret,
+    remain: isDarkMode ? pal.remain : lpal.remain,
+    barRent: isDarkMode ? pal.rent : lpal.rent,
+    barRet: isDarkMode ? pal.ret : lpal.ret,
+    pieUse: isDarkMode ? pal.rent : lpal.rent,
+    pieSlot: isDarkMode ? pal.grid : lpal.grid,
   };
 
   // ====== 共用 Tooltip 樣式（避免黑底黑字） ======
   const tooltipStyle = {
     contentStyle: {
-      backgroundColor: isDarkMode ? pal.tooltip : "#ffffff",
-      border: `1px solid ${isDarkMode ? pal.grid : "#e5e7eb"}`,
+      backgroundColor: isDarkMode ? pal.tooltip : lpal.card,
+      border: `1px solid ${isDarkMode ? pal.grid : lpal.border}`,
       borderRadius: 12,
       boxShadow: isDarkMode ? "0 8px 24px rgba(0,0,0,0.40)" : "0 8px 24px rgba(0,0,0,0.08)",
-       color: isDarkMode ? pal.text : "#111827",
+       color: isDarkMode ? pal.text : lpal.text,
       padding: 10,
     },
     itemStyle: {
-       color: isDarkMode ? pal.text : "#111827",
+       color: isDarkMode ? pal.text : lpal.text,
     },
     labelStyle: {
-       color: isDarkMode ? pal.text : "#111827",
+       color: isDarkMode ? pal.text : lpal.text,
       fontWeight: 600,
     },
     wrapperStyle: { outline: "none" },
@@ -669,12 +723,12 @@ export default function App() {
         color: active ? "#f1f5f9" : "#cbd5e1",
       }
     : {
-        background: active ? "#fafafa" : "#f3f3f3",
-        border: `1.5px solid ${active ? "#9ca3af" : "#ffffff"}`,
+        background: active ? lpal.tileOn : lpal.tile,
+        border: `1.5px solid ${active ? lpal.tileEdge : "#ffffff"}`,
         boxShadow: active
           ? "3px 3px 8px rgba(0,0,0,0.14), -2px -2px 6px rgba(255,255,255,0.9)"
           : "inset 1px 1px 3px rgba(0,0,0,0.05)",
-        color: active ? "#111827" : "#6b7280",
+        color: active ? lpal.text : lpal.sub,
       };
 
   // === 風險條顏色：低=綠 / 中=橙 / 高=紅（支援日/夜） ===
@@ -686,8 +740,8 @@ export default function App() {
   };
 
   return (
-    <div className={`${isDarkMode ? "theme-dark" : "theme-light"} min-h-screen ${bgClass} ${textPrimary}`} style={isDarkMode ? darkVars(pal) : undefined}>
-      <div className={`sticky top-0 z-50 backdrop-blur-xl ${isDarkMode ? 'yd-header shadow-[0_6px_20px_rgba(0,0,0,0.35)]' : 'bg-white/85 shadow-[0_6px_20px_rgba(0,0,0,0.06)]'}`}>
+    <div className={`${isDarkMode ? "theme-dark" : "theme-light"} min-h-screen ${bgClass} ${textPrimary}`} style={isDarkMode ? darkVars(pal) : lightVars(lpal)}>
+      <div className={`sticky top-0 z-50 backdrop-blur-xl ${isDarkMode ? 'yd-header shadow-[0_6px_20px_rgba(0,0,0,0.35)]' : 'yl-header shadow-[0_6px_20px_rgba(0,0,0,0.06)]'}`}>
         <div className="max-w-[1920px] mx-auto px-6 py-3 flex items-center justify-between">
           <Logo isDark={isDarkMode} />
           <div className="flex items-center gap-3">
@@ -709,7 +763,7 @@ export default function App() {
                 <h3 className="font-bold text-sm">常用站點</h3>
                 <button
                   onClick={() => { setFavorites([]); localStorage.setItem(LS_FAV_KEY, "[]"); }}
-                  className={`neu-press text-xs underline ${isDarkMode ? 'yd-sub' : 'text-gray-600'}`}
+                  className={`neu-press text-xs underline ${isDarkMode ? 'yd-sub' : 'yl-sub'}`}
                 >
                   清空
                 </button>
@@ -721,13 +775,13 @@ export default function App() {
                     .map(st => (
                       <div key={st.station_id}
                         className={`neu-press group inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs cursor-pointer
-                          ${isDarkMode ? 'yd-soft yd-border' : 'bg-gray-50 hover:bg-gray-100 border-gray-200'}`}
+                          ${isDarkMode ? 'yd-soft yd-border' : 'yl-soft yl-border'}`}
                         onClick={() => setStationId(String(st.station_id))}
                       >
                         <span className="font-medium">{st.station_name}</span>
                         <button
                           onClick={(e) => { e.stopPropagation(); toggleFav(st.station_id); }}
-                          className={`${isDarkMode ? 'yd-sub' : 'text-gray-500'} opacity-70 group-hover:opacity-100`}
+                          className={`${isDarkMode ? 'yd-sub' : 'yl-sub'} opacity-70 group-hover:opacity-100`}
                           title="移除常用"
                         >
                           ×
@@ -740,7 +794,7 @@ export default function App() {
 
             <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
               <div className="flex items-center gap-2 mb-4">
-                <MapPin className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'text-gray-800'}`} />
+                <MapPin className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'yl-accent'}`} />
                 <h3 className="font-bold text-sm">站點選擇</h3>
               </div>
               <div className="space-y-3">
@@ -770,9 +824,9 @@ export default function App() {
                     onClick={() => toggleFav(stationId)}
                     title={isFav(stationId) ? "從常用移除" : "加入常用"}
                     className={`neu-press shrink-0 px-3 py-2 rounded-xl border
-                      ${isDarkMode ? 'yd-soft yd-border' : 'bg-gray-100 hover:bg-gray-200 border-gray-300'}`}
+                      ${isDarkMode ? 'yd-soft yd-border' : 'yl-soft yl-border'}`}
                   >
-                    <span className={`text-lg ${isFav(stationId) ? (isDarkMode ? 'text-yellow-300' : 'text-yellow-500') : (isDarkMode ? 'yd-sub' : 'text-gray-500')}`}>
+                    <span className={`text-lg ${isFav(stationId) ? (isDarkMode ? 'text-yellow-300' : 'text-yellow-500') : (isDarkMode ? 'yd-sub' : 'yl-sub')}`}>
                       ★
                     </span>
                   </button>
@@ -782,7 +836,7 @@ export default function App() {
 
             <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
               <div className="flex items-center gap-2 mb-4">
-                <Cloud className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'text-gray-800'}`} />
+                <Cloud className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'yl-accent'}`} />
                 <h3 className="font-bold text-sm">天氣設定</h3>
               </div>
               {/* 天氣情境卡片：圖示在上、文字在下；選取中的卡片凸起並顯示勾勾 */}
@@ -851,11 +905,11 @@ export default function App() {
                   <div className={`text-sm ${textSecondary} mt-2`}>可借車輛</div>
                 </div>
                 <div className="text-center">
-                  <div className={`text-5xl font-bold ${isDarkMode ? 'yd-sub' : 'text-gray-500'}`}>{realtime?.remain_slots ?? "—"}</div>
+                  <div className={`text-5xl font-bold ${isDarkMode ? 'yd-sub' : 'yl-sub'}`}>{realtime?.remain_slots ?? "—"}</div>
                   <div className={`text-sm ${textSecondary} mt-2`}>可停車格</div>
                 </div>
                 <div className="text-center">
-                  <div className={`text-5xl font-bold ${isDarkMode ? 'yd-accent' : 'text-gray-800'}`}>{realtime?.capacity ?? "—"}</div>
+                  <div className={`text-5xl font-bold ${isDarkMode ? 'yd-accent' : 'yl-accent'}`}>{realtime?.capacity ?? "—"}</div>
                   <div className={`text-sm ${textSecondary} mt-2`}>總容量</div>
                 </div>
               </div>
@@ -941,7 +995,7 @@ export default function App() {
           <div className="col-span-12 lg:col-span-3 space-y-6">
             <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
               <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'text-gray-800'}`} />
+                <AlertTriangle className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'yl-accent'}`} />
                 <h3 className="font-bold text-sm">風險評估</h3>
               </div>
               {risk ? (
@@ -951,7 +1005,7 @@ export default function App() {
                       <span className="text-sm">缺車風險</span>
                       <span className="text-lg font-bold">{risk.stockout.level}</span>
                     </div>
-                    <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'yd-soft' : 'bg-gray-200'}`}>
+                    <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'yd-soft' : 'yl-soft'}`}>
                       <div className={`h-full ${riskBarClass(risk.stockout.level)}`} style={{ width: `${risk.stockout.score * 100}%` }} />
                     </div>
                   </div>
@@ -960,7 +1014,7 @@ export default function App() {
                       <span className="text-sm">滿車風險</span>
                       <span className="text-lg font-bold">{risk.full.level}</span>
                     </div>
-                    <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'yd-soft' : 'bg-gray-200'}`}>
+                    <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'yd-soft' : 'yl-soft'}`}>
                       <div className={`h-full ${riskBarClass(risk.full.level)}`} style={{ width: `${risk.full.score * 100}%` }} />
                     </div>
                   </div>
@@ -970,22 +1024,22 @@ export default function App() {
 
             <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
               <div className="flex items-center gap-2 mb-4">
-                <Leaf className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'text-gray-800'}`} />
+                <Leaf className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'yl-accent'}`} />
                 <h3 className="font-bold text-sm">環境效益</h3>
               </div>
               <div className="space-y-4">
                 <div className={`text-center py-4 rounded-xl ${
-                  isDarkMode ? 'yd-soft border yd-border' : 'bg-gray-50 border border-gray-200'
+                  isDarkMode ? 'yd-soft border yd-border' : 'yl-soft border yl-border'
                 }`}>
-                  <div className={`${isDarkMode ? 'yd-accent' : 'text-gray-900'} text-3xl font-bold`}>{Math.round(eco.trips)}</div>
+                  <div className={`${isDarkMode ? 'yd-accent' : 'yl-accent'} text-3xl font-bold`}>{Math.round(eco.trips)}</div>
                   <div className={`text-xs ${textSecondary} mt-1`}>預測騎乘趟數</div>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className={`flex justify-between p-2 rounded-lg ${isDarkMode ? 'yd-soft' : 'bg-gray-50'}`}>
+                  <div className={`flex justify-between p-2 rounded-lg ${isDarkMode ? 'yd-soft' : 'yl-soft'}`}>
                     <span>vs 機車</span>
                     <span className="font-bold">-{eco.saveScooter.toFixed(1)} kg CO₂</span>
                   </div>
-                  <div className={`flex justify-between p-2 rounded-lg ${isDarkMode ? 'yd-soft' : 'bg-gray-50'}`}>
+                  <div className={`flex justify-between p-2 rounded-lg ${isDarkMode ? 'yd-soft' : 'yl-soft'}`}>
                     <span>vs 汽車</span>
                     <span className="font-bold">-{eco.saveCar.toFixed(1)} kg CO₂</span>
                   </div>
@@ -996,7 +1050,7 @@ export default function App() {
             {selectedStation && (
               <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
                 <div className="flex items-center gap-2 mb-4">
-                  <MapPin className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'text-gray-800'}`} />
+                  <MapPin className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'yl-accent'}`} />
                   <h3 className="font-bold text-sm">站點資訊</h3>
                 </div>
                 <div className="space-y-2 text-sm">
