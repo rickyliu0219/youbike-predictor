@@ -47,13 +47,13 @@ Riders often arrive at a YouBike station to find no bikes, or no empty dock to r
 Only **Python 3.10+** is required — the pre-built web UI (`frontend/dist`) is served by the backend.
 
 ```bat
-:: 1. First-time setup: creates venv\ and installs packages
+1. First-time setup: creates venv\ and installs packages
 setup.bat
 
-:: 2. Start; opens the browser automatically
+2. Start; opens the browser automatically
 start.bat
 
-:: 3. Stop everything
+3. Stop everything
 stop.bat
 ```
 
