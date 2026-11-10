@@ -16,17 +16,23 @@ if not exist venv\Scripts\python.exe (
 
 echo [1/3] 啟動後端 FastAPI (http://127.0.0.1:8000) ...
 REM 用 venv 裡的 python 執行 uvicorn，不依賴系統全域套件
-start "YouBike Backend" cmd /k "cd /d "%~dp0backend" && ..\venv\Scripts\python.exe -m uvicorn main:app --reload --port 8000"
+start "YouBike Backend" /D "%~dp0backend" cmd /k ..\venv\Scripts\python.exe -m uvicorn main:app --port 8000
 
-REM 等後端載入模型
-timeout /t 6 /nobreak >nul
+REM 等後端載入模型：最多等 30 秒，每秒檢查一次 8000 port 是否已在監聽
+echo       等待後端就緒 ...
+for /l %%i in (1,1,30) do (
+    netstat -ano | findstr ":8000" | findstr LISTENING >nul && goto backend_ready
+    timeout /t 1 /nobreak >nul
+)
+echo [警告] 後端 30 秒內沒有啟動，請查看「YouBike Backend」視窗的錯誤訊息
+:backend_ready
 
 REM 判斷要用哪種前端模式
 set "WEB_URL=http://127.0.0.1:8000"
 where npm >nul 2>&1
 if not errorlevel 1 if exist frontend\node_modules (
     echo [2/3] 偵測到 Node.js，啟動前端開發模式 Vite ^(http://localhost:5173^) ...
-    start "YouBike Frontend" cmd /k "cd /d "%~dp0frontend" && npm run dev"
+    start "YouBike Frontend" /D "%~dp0frontend" cmd /k npm run dev
     set "WEB_URL=http://localhost:5173"
     timeout /t 3 /nobreak >nul
 ) else (
