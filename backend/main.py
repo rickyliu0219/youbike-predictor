@@ -1,13 +1,29 @@
 # backend/main.py
+"""
+YouBike 站點租借／歸還預測 API（FastAPI）
+
+整體流程：
+  1. 從台北市 YouBike 2.0 即時 API 取得站點清單與目前車數
+  2. 用 RandomForest 模型（依站點、時段、星期、天氣、溫度）預測每小時「借出量」與「歸還量」
+  3. 以「目前可借車數」為起點，逐小時推算未來的剩餘車數（考慮車柱容量上下限）
+  4. 若模型檔不存在且無法訓練，改用 heuristic（經驗公式）後備，確保 API 永遠有回應
+
+主要路由：
+  GET  /health                 健康檢查（模型是否載入）
+  GET  /stations               站點清單（預設即時 API，?source=csv 改讀本地檔）
+  GET  /realtime/{station_id}  單站即時車數
+  GET  /stations/search?q=     站名／站號搜尋
+  POST /predict_one            指定時間點的單次預測
+  POST /forecast_day           6／12／24 小時預報（含剩餘車數推算）
+"""
 from __future__ import annotations
 
 from typing import Optional, List, Dict, Tuple
 
 import math
+import time
 from pathlib import Path
-from datetime import datetime
 from datetime import datetime, timedelta
-
 
 import pandas as pd
 import joblib
@@ -75,6 +91,12 @@ else:
 # -----------------------------
 # 即時 API 讀取與正規化
 # -----------------------------
+# 即時資料快取：官方 API 約每分鐘更新一次，一次預報請求內會多次讀取站點資訊，
+# 快取 30 秒可避免重複下載整份 JSON（約 1,600 站），也降低被官方限流的機會。
+_REALTIME_CACHE: Dict[str, object] = {"ts": 0.0, "rows": None}
+_REALTIME_TTL_SEC = 30
+
+
 def _fetch_realtime_rows() -> List[Dict]:
     """
     讀取台北市 YouBike 即時 API 並正規化欄位。
@@ -83,6 +105,11 @@ def _fetch_realtime_rows() -> List[Dict]:
       available_rent_bikes (int), available_return_bikes (int),
       lat, lon, update_time
     """
+    # 快取未過期 → 直接回傳
+    cached = _REALTIME_CACHE["rows"]
+    if cached is not None and time.time() - float(_REALTIME_CACHE["ts"]) < _REALTIME_TTL_SEC:
+        return cached  # type: ignore[return-value]
+
     try:
         with httpx.Client(timeout=10.0) as client:
             resp = client.get(YOUBIKE_TPE_URL)
@@ -108,6 +135,10 @@ def _fetch_realtime_rows() -> List[Dict]:
             "lon": float(r.get("longitude") or 0.0),
             "update_time": r.get("updateTime") or r.get("mday") or "",
         })
+
+    # 寫入快取
+    _REALTIME_CACHE["rows"] = rows
+    _REALTIME_CACHE["ts"] = time.time()
     return rows
 
 # -----------------------------
@@ -156,6 +187,8 @@ def train_or_load_models():
         else:
             df = yb.copy()
 
+        # --- 特徵工程 ---
+        # hour：0–23 時；dow：星期（0=週一）；is_peak：通勤尖峰（7–9、17–19 時）
         df["hour"] = df["datetime"].dt.hour
         df["dow"] = df["datetime"].dt.dayofweek
         df["is_peak"] = ((df["hour"].between(7, 9)) | (df["hour"].between(17, 19))).astype(int)
@@ -175,6 +208,7 @@ def train_or_load_models():
         y_rent = pd.to_numeric(df.get("rent_cnt", 0), errors="coerce").fillna(0)
         y_return = pd.to_numeric(df.get("return_cnt", 0), errors="coerce").fillna(0)
 
+        # 站號、行政區是類別 → One-Hot；其餘數值欄位直接送進模型
         numeric = ["docks_total", "hour", "dow", "is_peak", "rain_mm", "is_rain", "temp_C"]
         categorical = ["station_id", "district"]
         pre = ColumnTransformer([
@@ -182,9 +216,11 @@ def train_or_load_models():
             ("num", "passthrough", numeric),
         ])
 
+        # 「quick」版：資料量大時只抽 20% 訓練，讓第一次啟動在數十秒內完成
         df_sample = df.sample(frac=0.2, random_state=42) if len(df) > 1500 else df.copy()
         Xs = df_sample[features].copy()
 
+        # 借出、歸還各訓練一個 RandomForest 回歸模型；限制深度避免過擬合與模型檔過大
         rf_params = dict(n_estimators=80, random_state=42, n_jobs=-1, max_depth=12, min_samples_leaf=3)
         rent_model = Pipeline([("pre", pre), ("rf", RandomForestRegressor(**rf_params))])
         return_model = Pipeline([("pre", pre), ("rf", RandomForestRegressor(**rf_params))])
@@ -194,6 +230,7 @@ def train_or_load_models():
         Xtr2, Xte2, ytr2, yte2 = train_test_split(Xs, y_return.loc[df_sample.index], test_size=0.2, random_state=42)
         return_model.fit(Xtr2, ytr2)
 
+        # 存成 .pkl，下次啟動直接載入、不用重新訓練
         joblib.dump(rent_model, RENT_MODEL_PATH)
         joblib.dump(return_model, RETURN_MODEL_PATH)
         return rent_model, return_model
@@ -201,14 +238,13 @@ def train_or_load_models():
         print(f"[WARN] 快速訓練失敗，改用 heuristic 後備：{e}")
         return None, None
 
+# 伺服器啟動時就載入（或訓練）模型，之後每次請求共用
 RENT_MODEL, RETURN_MODEL = train_or_load_models()
-
-def _clamp(x, lo, hi):
-    return hi if x > hi else lo if x < lo else x
 
 def _predict_counts_once(*, sid: int, district: str, docks_total: int,
                          dt: datetime, rain_mm: float, is_rain: int, temp_c: float) -> Dict[str, float]:
     """
+    預測某站在某個整點的「借出量」與「歸還量」（單位：輛／小時）。
     有模型：走 RandomForest 預測
     無模型：走 heuristic（含時段/天氣/溫度）
     """
@@ -333,6 +369,7 @@ def stations(source: Optional[str] = "api"):
 
 @app.get("/realtime/{station_id}")
 def get_realtime(station_id: str):
+    """回傳單一站點的即時資料（可借車數、可還空位、更新時間）。"""
     try:
         rows = _fetch_realtime_rows()
         sid = str(station_id).strip()
@@ -351,6 +388,7 @@ def get_realtime(station_id: str):
 
 @app.get("/stations/search")
 def stations_search(q: str):
+    """用站號或站名關鍵字搜尋（不分大小寫），一併回傳目前車數。"""
     rows = _fetch_realtime_rows()
     ql = (q or "").strip().lower()
     out = []
@@ -396,6 +434,11 @@ def predict_one(req: PredictIn):
 # 輔助：站點資訊（API 優先，容量回退 CSV）
 # -----------------------------
 def _get_station_info_with_fallback(station_id: int) -> Tuple[str, int, Optional[int], Optional[int]]:
+    """
+    回傳 (行政區, 車柱總數, 目前可借車數, 目前可還空位)。
+    先查即時 API；查不到（或 API 掛掉）時，改從本地 stations.csv 取得行政區與容量，
+    此時即時車數為 None，預報就只會給流量、不推算剩餘車數。
+    """
     sid_s = str(station_id)
     district, cap, now_remain, now_empty = "", 0, None, None
 
@@ -454,10 +497,13 @@ def forecast_day(req: ForecastIn):
       if cap <= 0:
           raise HTTPException(status_code=400, detail="該站點容量未知或為 0，請確認站點 ID")
 
+      # --- 修正係數：在模型輸出上再乘上情境係數，讓曲線對天氣／時段更敏感 ---
+      # rain_k：小雨（<2 mm）打 75–85 折；大雨依指數衰減，最低 0.35
       def rain_k(rmm, rflag):
           if not rflag or rmm <= 0: return 1.0
           if rmm < 2: return 0.85 - 0.10 * (rmm / 2)
           return max(0.35, math.exp(-0.25 * (rmm - 2)))
+      # temp_k：20–28°C 為舒適區（係數 1），離越遠衰減越多；≤5°C 或 ≥40°C 再大幅打折
       def temp_k(tc):
           t = max(0.0, min(50.0, float(tc)))
           lo, hi = 20.0, 28.0
@@ -465,6 +511,7 @@ def forecast_day(req: ForecastIn):
           f = math.exp(-d / 3.0)
           if t <= 5 or t >= 40: f *= 0.35
           return max(0.05, f)
+      # tod_k（time of day）：深夜 23–5 時壓低、通勤尖峰拉高
       def tod_k(h):
           if h >= 23 or h <= 5: return 0.12
           if 7 <= h <= 9 or 17 <= h <= 19: return 1.15
@@ -498,6 +545,7 @@ def forecast_day(req: ForecastIn):
       else:
           raise HTTPException(status_code=400, detail=f"未知 view: {view}")
 
+      # 某個整點的「理論流量」= 模型預測 × 各情境係數（尚未考慮車柱容量限制）
       def model_flow_at(dt_local: datetime):
           pred = _predict_counts_once(
               sid=int(req.station_id), district=district, docks_total=cap,
@@ -511,30 +559,45 @@ def forecast_day(req: ForecastIn):
               rent, ret = max(rent, floor), max(ret, floor)
           return rent, ret
 
-      # 橋接：把 now_remain 推到 start_dt
+      def step_inventory(remain: float, rent0: float, ret0: float):
+          """
+          以「目前剩餘車數」推進一小時，回傳 (實際借出, 實際歸還, 新剩餘車數)。
+
+          物理限制：
+            - 借出量不能超過站上現有車數（remain）
+            - 歸還量不能超過空車柱數（cap - remain）
+          飽和修正：
+            - 車數低於容量 30% 時，借出量依比例遞減（車少、大家借不到）
+            - 空柱低於容量 30% 時，歸還量依比例遞減（快滿、大家還不進去）
+          """
+          can_rent = remain
+          can_ret = max(0, cap - remain)
+          denom = max(1, int(0.30 * cap))
+          sat_r = 1.0 if cap == 0 else remain / denom
+          sat_f = 1.0 if cap == 0 else (cap - remain) / denom
+          rent_adj = min(rent0 * min(1.0, sat_r), can_rent)
+          ret_adj = min(ret0 * min(1.0, sat_f), can_ret)
+          # 只要還有車／空位，就保留極小的流量，避免曲線卡死在 0 或滿站
+          if can_rent > 0: rent_adj = max(rent_adj, min(0.02, can_rent))
+          if can_ret > 0: ret_adj = max(ret_adj, min(0.02, can_ret))
+          new_remain = max(0, min(cap, remain - rent_adj + ret_adj))
+          return rent_adj, ret_adj, new_remain
+
+      # 橋接：視窗起點若在未來（例如明天 00:00），先從「現在的即時車數」逐小時推算到起點
       remain_start = None
       if bridge_from_now and req.use_realtime_start and now_remain is not None:
           remain = max(0, min(cap, now_remain))
           dt_ptr = now
           while dt_ptr < start_dt:
               rent0, ret0 = model_flow_at(dt_ptr)
-              can_rent = remain
-              can_ret  = max(0, cap - remain)
-              denom = max(1, int(0.30 * cap))
-              sat_r = 1.0 if cap == 0 else remain / denom
-              sat_f = 1.0 if cap == 0 else (cap - remain) / denom
-              rent_adj = min(rent0 * min(1.0, sat_r), can_rent)
-              ret_adj  = min(ret0  * min(1.0, sat_f), can_ret)
-              if can_rent > 0: rent_adj = max(rent_adj, min(0.02, can_rent))
-              if can_ret  > 0: ret_adj  = max(ret_adj,  min(0.02, can_ret))
-              remain = max(0, min(cap, remain - rent_adj + ret_adj))
+              _, _, remain = step_inventory(remain, rent0, ret0)
               dt_ptr = dt_ptr + timedelta(hours=1)
           remain_start = remain
 
-      # 產生視窗序列
+      # 產生視窗內每小時的序列
       out_rows, remain_series = [], []
       dt = start_dt
-      remain_known = remain_start is not None
+      remain_known = remain_start is not None   # 拿不到即時車數時，只回傳流量、不推算剩餘車數
       remain = remain_start if remain_known else None
 
       for _ in range(horizon):
@@ -542,16 +605,7 @@ def forecast_day(req: ForecastIn):
           label = dt.strftime("%m/%d %H:00")
 
           if remain_known:
-              can_rent = remain
-              can_ret  = max(0, cap - remain)
-              denom = max(1, int(0.30 * cap))
-              sat_r = 1.0 if cap == 0 else remain / denom
-              sat_f = 1.0 if cap == 0 else (cap - remain) / denom
-              rent_adj = min(rent0 * min(1.0, sat_r), can_rent)
-              ret_adj  = min(ret0  * min(1.0, sat_f), can_ret)
-              if can_rent > 0: rent_adj = max(rent_adj, min(0.02, can_rent))
-              if can_ret  > 0: ret_adj  = max(ret_adj,  min(0.02, can_ret))
-              remain = max(0, min(cap, remain - rent_adj + ret_adj))
+              rent_adj, ret_adj, remain = step_inventory(remain, rent0, ret0)
               remain_series.append(remain)
               out_rows.append({ "hour": label, "rent": rent_adj, "ret": ret_adj })
           else:

@@ -1,6 +1,7 @@
 fastapi
 uvicorn[standard]
+httpx                 # 呼叫台北市 YouBike 即時 API
 pandas
-scikit-learn
+scikit-learn==1.7.2   # 需與 rf_*_model_quick.pkl 訓練時的版本一致，否則可能讀不到模型
 joblib
 python-multipart

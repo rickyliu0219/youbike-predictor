@@ -1,21 +1,39 @@
+// src/App.jsx
+// =============================================================
+// YouBike 機器學習預測系統 — 前端主畫面（React + Tailwind + Recharts）
+//
+// 版面：
+//   左欄：常用站點、站點選擇（搜尋／行政區篩選）、天氣設定、時間視窗
+//   中欄：即時狀態（可借／可停／容量）、逐小時預測折線圖、時段統計長條圖
+//   右欄：缺車／滿車風險、CO₂ 減量估算、站點資訊
+//
+// 資料流：
+//   1. 載入時 GET /stations 取得站點清單
+//   2. 選定站點 → GET /realtime/{id} 取得即時車數
+//   3. 任何條件（站點／天氣／時間視窗）改變 → 250ms 防抖後 POST /forecast_day
+//   所有 /api/* 請求由 Vite dev server 代理到 http://localhost:8000（見 vite.config.js）
+// =============================================================
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
-import { Bike, Clock, MapPin, RefreshCw, Loader2, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar, TrendingUp, TrendingDown, Activity } from "lucide-react";
+import { Bike, Clock, MapPin, RefreshCw, Loader2, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar } from "lucide-react";
 
-const API = "/api";
-const round2 = (x) => Math.round((Number(x) || 0) * 100) / 100;
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+// ---------- 常數與小工具 ----------
+const API = "/api";                                   // 後端 API 前綴（經 Vite 代理）
+const round2 = (x) => Math.round((Number(x) || 0) * 100) / 100;   // 四捨五入到小數第 2 位
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));       // 限制數值範圍
 const TAIPEI_TZ = "Asia/Taipei";
 const LS_FAV_KEY = "yb_favorites"; // ← 常用站點 localStorage key
 
+// 取得台北時間的 { date: "YYYY-MM-DD", time: "HH:mm" }（"sv-SE" 地區格式剛好是 ISO 樣式）
 function nowInTaipei() {
   const s = new Date().toLocaleString("sv-SE", { timeZone: TAIPEI_TZ, hour12: false });
   const [d, t] = s.split(" ");
   return { date: d, time: t.slice(0, 5) };
 }
 
+// 從 "11/10 08:00" 這類標籤取出小時數（8）；格式不符回傳 NaN
 const getHour = (val) => {
   const s = String(val ?? "");
   const tail = s.slice(-5);
@@ -24,19 +42,21 @@ const getHour = (val) => {
 };
 
 export default function App() {
+  // ===== 畫面狀態 =====
   const [isDarkMode, setIsDarkMode] = useState(true); // 夜間=深色、日間=黑白
-  const [stations, setStations] = useState([]);
-  const [stationId, setStationId] = useState("");
-  const [searchText, setSearchText] = useState("");
+  const [stations, setStations] = useState([]);        // 全部站點清單
+  const [stationId, setStationId] = useState("");      // 目前選取的站點
+  const [searchText, setSearchText] = useState("");    // 站名／站號搜尋字
   const [districtFilter, setDistrictFilter] = useState("全部");
   const [date, setDate] = useState(() => nowInTaipei().date);
   const [time, setTime] = useState(() => nowInTaipei().time);
-  const [rainMm, setRainMm] = useState(0);
-  const [isRain, setIsRain] = useState(0);
-  const [tempC, setTempC] = useState(26);
-  const [rangeView, setRangeView] = useState("today");
-  const [realtime, setRealtime] = useState(null);
-  const [series, setSeries] = useState([]);
+  // 天氣條件（送給後端當模型特徵）
+  const [rainMm, setRainMm] = useState(0);             // 降雨量 mm
+  const [isRain, setIsRain] = useState(0);             // 是否下雨（由 rainMm 自動同步）
+  const [tempC, setTempC] = useState(26);              // 氣溫 °C
+  const [rangeView, setRangeView] = useState("today"); // 預測視窗：next6 / next12 / today / tomorrow / dayafter
+  const [realtime, setRealtime] = useState(null);      // 即時車數
+  const [series, setSeries] = useState([]);            // 逐小時預測結果 [{hour, rent, ret, remain}]
   const [loadingAll, setLoadingAll] = useState(false);
 
   // ===== 常用站點狀態 =====
@@ -77,6 +97,7 @@ export default function App() {
     });
   };
 
+  // 一鍵天氣情境
   const presets = [
     { name: "☀️ 晴", rain_mm: 0, temp: 28 },
     { name: "☁️ 陰", rain_mm: 0, temp: 24 },
@@ -84,13 +105,18 @@ export default function App() {
     { name: "⛈️ 大雨", rain_mm: 8, temp: 21 },
   ];
 
+  // ===== 載入站點清單：先用即時 API，失敗時改用後端本地 CSV =====
   useEffect(() => {
     (async () => {
-      try {
-        const r = await fetch(`${API}/stations`);
+      const load = async (url) => {
+        const r = await fetch(url);
         const j = await r.json();
-        setStations(j || []);
-        if (j?.length) setStationId(String(j[0].station_id));
+        return r.ok && Array.isArray(j) ? j : null;   // 後端出錯時回傳的是 {error: ...}，不是陣列
+      };
+      try {
+        const list = (await load(`${API}/stations`)) || (await load(`${API}/stations?source=csv`)) || [];
+        setStations(list);
+        if (list.length) setStationId(String(list[0].station_id));
       } catch (e) {
         console.error(e);
       }
@@ -102,6 +128,7 @@ export default function App() {
     [stations]
   );
 
+  // 依行政區 + 關鍵字篩選站點
   const filteredStations = useMemo(() => {
     const q = searchText.trim().toLowerCase();
     return (stations || []).filter((s) => {
@@ -119,17 +146,20 @@ export default function App() {
     return [...favs, ...others];
   }, [filteredStations, favorites]);
 
+  // 篩選後若目前站點不在清單內，自動改選第一個
   useEffect(() => {
     if (!orderedStations.length) return;
     const exist = orderedStations.some(s => String(s.station_id) === String(stationId));
     if (!exist) setStationId(String(orderedStations[0].station_id));
   }, [orderedStations, stationId]);
 
+  // 降雨量 > 0 就視為下雨（is_rain 是模型特徵之一）
   useEffect(() => {
     if (rainMm > 0 && isRain !== 1) setIsRain(1);
     if (rainMm === 0 && isRain !== 0) setIsRain(0);
   }, [rainMm, isRain]);
 
+  // ===== 切換站點時抓即時車數 =====
   useEffect(() => {
     if (!stationId) return;
     (async () => {
@@ -152,6 +182,8 @@ export default function App() {
     })();
   }, [stationId]);
 
+  // ===== 呼叫 /forecast_day 取得逐小時預測，轉成圖表用的資料 =====
+  // 失敗時塞一組全 0 的序列，讓圖表維持版面而不是整個消失
   async function buildIntradaySeries() {
     const safeNum = (v) => {
       const n = Number(v);
@@ -209,6 +241,7 @@ export default function App() {
     try { await buildIntradaySeries(); } finally { setLoadingAll(false); }
   }
 
+  // 防抖：拖動溫度／降雨滑桿時不要每一格都打 API，停 250ms 才送出
   const deb = useRef(null);
   useEffect(() => {
     if (!stationId) return;
@@ -217,6 +250,7 @@ export default function App() {
     return () => clearTimeout(deb.current);
   }, [stationId, date, time, rainMm, isRain, tempC, rangeView]);
 
+  // 時段加總：早上 6–9、中午 12–13、晚上 16–18、整個視窗
   const aggregates = useMemo(() => {
     const toInt = (x) => Math.max(0, Math.round(Number(x) || 0));
     const inRange = (lo, hi) => (r) => {
@@ -237,6 +271,9 @@ export default function App() {
     [stations, stationId]
   );
 
+  // 風險評估（以即時車數計算）：
+  //   缺車風險 = 1 − 可借車數 / 容量；滿車風險 = 1 − 空位數 / 容量
+  //   ≥ 0.75 → 高、≥ 0.45 → 中、其餘 → 低
   const risk = useMemo(() => {
     const capFromRt = Number(realtime?.remain_bikes || 0) + Number(realtime?.remain_slots || 0);
     const cap = Number(realtime?.capacity || capFromRt || selectedStation?.docks_total || 0);
@@ -253,6 +290,7 @@ export default function App() {
     };
   }, [selectedStation, realtime]);
 
+  // CO₂ 減量估算：假設每趟 2.5 km；機車約 0.075 kg/km、汽車約 0.17 kg/km
   const eco = useMemo(() => {
     const trips = Number(aggregates?.day?.rent || 0);
     return { 
@@ -262,19 +300,15 @@ export default function App() {
     };
   }, [aggregates?.day]);
 
-  const viewLabel = useMemo(() => {
-    const map = { next6: "6H", next12: "12H", today: "TODAY", tomorrow: "TOMORROW", dayafter: "DAY AFTER" };
-    return map[rangeView] || "TODAY";
-  }, [rangeView]);
-
   const timeData = [
     { name: "早上", rent: aggregates.morning.rent, ret: aggregates.morning.ret },
     { name: "中午", rent: aggregates.noon.rent, ret: aggregates.noon.ret },
     { name: "晚上", rent: aggregates.evening.rent, ret: aggregates.evening.ret },
   ];
 
+  // 圓餅圖：站上的車 vs 空車柱
   const capacityData = realtime ? [
-    { name: "使用中", value: realtime.remain_bikes },
+    { name: "可借車輛", value: realtime.remain_bikes },
     { name: "空位", value: realtime.remain_slots },
   ] : [];
 
@@ -583,7 +617,7 @@ export default function App() {
             <div className={`${cardClass} border rounded-2xl p-6 shadow-xl`}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold">即時預測</h2>
-                <div className={`text-xs ${textSecondary}`}>由XGBoost-模型預測</div>
+                <div className={`text-xs ${textSecondary}`}>RandomForest 模型預測</div>
               </div>
               <div className="h-80">
                 <ResponsiveContainer>
@@ -684,7 +718,7 @@ export default function App() {
                     <span>vs 汽車</span>
                     <span className="font-bold">-{eco.saveCar.toFixed(1)} kg</span>
                   </div>
-                  <div className={`text-xs ${textSecondary} text中心 mt-2`}>CO₂ 減量估算</div>
+                  <div className={`text-xs ${textSecondary} text-center mt-2`}>CO₂ 減量估算</div>
                 </div>
               </div>
             </div>
