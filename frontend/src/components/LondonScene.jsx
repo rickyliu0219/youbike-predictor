@@ -1,6 +1,6 @@
 // src/components/LondonScene.jsx
 // =============================================================
-// 夜間模式 header 裝飾：倫敦夜景 2D 小動畫（全部為 SVG 手繪，無外部圖檔）
+// 夜間模式頁面底部裝飾：倫敦夜景 2D 小動畫（全部為 SVG 手繪，無外部圖檔）
 //
 // 場景：遠方倫敦眼與城市剪影、星星閃爍、大笨鐘（時鐘指針＝現在時間）、
 //       煤氣路燈（暖光微微閃動）、紅色電話亭
@@ -98,7 +98,7 @@ function PhoneBox() {
   );
 }
 
-export default function LondonScene() {
+export default function LondonScene({ className = "" }) {
   const wrapRef = useRef(null);
   const guardRef = useRef(null);
   const [now, setNow] = useState(() => new Date());
@@ -163,7 +163,7 @@ export default function LondonScene() {
   }, []);
 
   return (
-    <div ref={wrapRef} className="lg-scene relative h-[60px] flex-1 mx-6 overflow-hidden pointer-events-none select-none" aria-hidden="true">
+    <div ref={wrapRef} className={`lg-scene relative h-[60px] overflow-hidden pointer-events-none select-none ${className}`} aria-hidden="true">
       {/* 星星 */}
       {[[8, 10], [19, 22], [31, 8], [44, 16], [57, 6], [66, 24], [79, 12], [91, 20]].map(([l, t], i) => (
         <span key={i} className="lg-star absolute rounded-full" style={{ left: `${l}%`, top: t, animationDelay: `${i * 0.7}s` }} />

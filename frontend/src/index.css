@@ -310,3 +310,39 @@ a {
 @media (prefers-reduced-motion: reduce) {
   .lg-star, .lg-glow, .lg-flicker, .lg-guard * { animation: none !important; }
 }
+
+/* =============================================================
+   夜間英國天空（components/LondonSky.jsx）
+   ============================================================= */
+.ls-sky { animation: yb-fadein .8s ease-out; }
+/* 雲：由左往右緩慢飄過 */
+.ls-cloud { left: -160px; animation: ls-drift linear infinite; }
+@keyframes ls-drift { from { left: -160px; } to { left: 100%; } }
+/* 飛行表演隊：28 秒一輪，前 30% 時間飛過，其餘時間隱藏 */
+.ls-jets { animation: ls-jets 28s linear infinite; animation-delay: 4s; opacity: 0; }
+@keyframes ls-jets {
+  0%   { left: -200px; opacity: 0; }
+  2%   { opacity: 1; }
+  28%  { opacity: 1; }
+  30%  { left: calc(100% + 60px); opacity: 0; }
+  100% { left: calc(100% + 60px); opacity: 0; }
+}
+/* 彩煙尾巴輕微伸縮 */
+.ls-smoke { transform-origin: right center; animation: ls-smoke 1.2s ease-in-out infinite alternate; }
+@keyframes ls-smoke { from { transform: scaleX(.85); } to { transform: scaleX(1); } }
+/* 鳥群：40 秒一輪，由右往左 */
+.ls-birds { animation: ls-birds 40s linear infinite; animation-delay: 16s; opacity: 0; }
+@keyframes ls-birds {
+  0%   { right: -60px; opacity: 0; }
+  2%   { opacity: 1; }
+  38%  { opacity: 1; }
+  40%  { right: calc(100% + 60px); opacity: 0; }
+  100% { right: calc(100% + 60px); opacity: 0; }
+}
+.ls-flap { transform-box: fill-box; transform-origin: center; animation: ls-flap .45s ease-in-out infinite alternate; }
+@keyframes ls-flap { from { transform: scaleY(1); } to { transform: scaleY(.55); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ls-cloud, .ls-jets, .ls-birds, .ls-smoke, .ls-flap { animation: none !important; }
+  .ls-jets, .ls-birds { display: none; }
+}

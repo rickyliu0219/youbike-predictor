@@ -22,6 +22,7 @@ import StationPicker from "./components/StationPicker";
 import { shortName } from "./utils";
 import StationMap from "./components/StationMap";
 import LondonScene from "./components/LondonScene";
+import LondonSky from "./components/LondonSky";
 
 // ---------- 常數與小工具 ----------
 const API = "/api";                                   // 後端 API 前綴（經 Vite 代理）
@@ -29,6 +30,7 @@ const round2 = (x) => Math.round((Number(x) || 0) * 100) / 100;   // 四捨五�
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));       // 限制數值範圍
 const TAIPEI_TZ = "Asia/Taipei";
 const LS_FAV_KEY = "yb_favorites"; // ← 常用站點 localStorage key
+const SCENE_SCALE = 1.7;           // 底部倫敦街景的放大倍率
 
 // 取得台北時間的 { date: "YYYY-MM-DD", time: "HH:mm" }（"sv-SE" 地區格式剛好是 ISO 樣式）
 function nowInTaipei() {
@@ -722,8 +724,8 @@ export default function App() {
       <div className={`sticky top-0 z-50 backdrop-blur-xl ${isDarkMode ? 'yd-header shadow-[0_6px_20px_rgba(0,0,0,0.35)]' : 'yl-header shadow-[0_6px_20px_rgba(0,0,0,0.06)]'}`}>
         <div className="max-w-[1920px] mx-auto px-6 py-3 flex items-center justify-between">
           <Logo isDark={isDarkMode} />
-          {/* 夜間模式限定：倫敦夜景＋巡邏衛兵（寬螢幕才顯示） */}
-          {isDarkMode ? <div className="hidden md:flex flex-1 min-w-0"><LondonScene /></div> : <div className="flex-1" />}
+          {/* 夜間模式限定：英國夜空（彎月、霧雲、飛行表演隊、鳥群），寬螢幕才顯示 */}
+          {isDarkMode ? <div className="hidden md:flex flex-1 min-w-0"><LondonSky /></div> : <div className="flex-1" />}
           <div className="flex items-center gap-3">
             <ThemeToggle isDark={isDarkMode} onToggle={() => setIsDarkMode(!isDarkMode)} />
             <RefreshButton loading={loadingAll} onClick={runAll} />
@@ -1027,10 +1029,19 @@ export default function App() {
         </div>
       </div>
 
-      <div className={`${cardClass} border-t mt-10`}>
+      {/* 夜間模式限定：頁面底部的倫敦街景＋巡邏衛兵（放大 1.7 倍；寬螢幕才顯示） */}
+      {isDarkMode && (
+        <div className="hidden md:block relative mt-8 max-w-[1920px] mx-auto px-6" style={{ height: 60 * SCENE_SCALE }}>
+          <div className="absolute bottom-0 left-6" style={{ width: `calc((100% - 48px) / ${SCENE_SCALE})`, transform: `scale(${SCENE_SCALE})`, transformOrigin: "left bottom" }}>
+            <LondonScene />
+          </div>
+        </div>
+      )}
+
+      <div className={`${cardClass} border-t ${isDarkMode ? "mt-0" : "mt-10"}`}>
         <div className="max-w-[1920px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between text-xs">
-            <div className={textSecondary}>© 2025 YouBike 機器學習預測系統 | 由劉禹寬製作</div>
+            <div className={textSecondary}>© 2025 YouBike 需求預測 | 由劉禹寬製作</div>
             <div className={textSecondary}>僅供比賽創意用途 · 不保證預測準確性 · 不承擔法律責任</div>
           </div>
         </div>
