@@ -1,58 +1,55 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" font-family="-apple-system, 'Segoe UI', 'Noto Sans TC', 'Noto Sans CJK TC', 'Microsoft JhengHei', sans-serif">
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+      <path d="M0,0 L10,5 L0,10 z" fill="#111"/>
     </marker>
     <style>
-      .box{rx:14;stroke-width:1.5}
-      .t{font-size:16px;font-weight:700;fill:#0f172a}
-      .s{font-size:12.5px;fill:#334155}
-      .l{font-size:12px;fill:#475569}
-      .ln{stroke:#64748b;stroke-width:1.6;fill:none;marker-end:url(#a)}
+      .box{fill:#fff;stroke:#111;stroke-width:1.6}
+      .sub{fill:#fff;stroke:#111;stroke-width:1}
+      .t{font-size:16px;font-weight:700;fill:#111}
+      .s{font-size:12.5px;fill:#333}
+      .h{font-size:12.5px;font-weight:600;fill:#111}
+      .l{font-size:12px;fill:#444}
+      .ln{stroke:#111;stroke-width:1.6;fill:none;marker-end:url(#a)}
     </style>
   </defs>
-  <rect width="960" height="400" fill="#ffffff"/>
+  <rect width="960" height="400" fill="#fff"/>
 
-  <!-- Browser -->
-  <rect class="box" x="30" y="130" width="200" height="140" fill="#ecfeff" stroke="#06b6d4"/>
+  <rect class="box" x="30" y="130" width="200" height="140" rx="14"/>
   <text class="t" x="130" y="162" text-anchor="middle">Browser 前端</text>
   <text class="s" x="130" y="188" text-anchor="middle">React 19 + Vite</text>
-  <text class="s" x="130" y="208" text-anchor="middle">Tailwind 4 · Recharts</text>
+  <text class="s" x="130" y="208" text-anchor="middle">Tailwind 4 · Recharts · Leaflet</text>
   <text class="s" x="130" y="236" text-anchor="middle">站點選擇 · 天氣情境</text>
-  <text class="s" x="130" y="254" text-anchor="middle">預測圖表 · 風險評估</text>
+  <text class="s" x="130" y="254" text-anchor="middle">預測圖表 · 風險評估 · 地圖</text>
 
-  <!-- Backend -->
-  <rect class="box" x="330" y="60" width="300" height="280" fill="#f0fdf4" stroke="#16a34a"/>
+  <rect class="box" x="330" y="60" width="300" height="280" rx="14"/>
   <text class="t" x="480" y="92" text-anchor="middle">FastAPI Backend 後端</text>
-  <rect x="352" y="110" width="256" height="60" rx="10" fill="#ffffff" stroke="#86efac"/>
-  <text class="s" x="480" y="135" text-anchor="middle" font-weight="600">即時資料層 Realtime</text>
+  <rect class="sub" x="352" y="110" width="256" height="60" rx="10"/>
+  <text class="h" x="480" y="135" text-anchor="middle">即時資料層 Realtime</text>
   <text class="l" x="480" y="155" text-anchor="middle">httpx 讀取 · 欄位正規化 · 30 秒快取</text>
-  <rect x="352" y="180" width="256" height="60" rx="10" fill="#ffffff" stroke="#86efac"/>
-  <text class="s" x="480" y="205" text-anchor="middle" font-weight="600">模型層 RandomForest ×2</text>
+  <rect class="sub" x="352" y="180" width="256" height="60" rx="10"/>
+  <text class="h" x="480" y="205" text-anchor="middle">模型層 RandomForest ×2</text>
   <text class="l" x="480" y="225" text-anchor="middle">借出量 / 歸還量 · heuristic 後備</text>
-  <rect x="352" y="250" width="256" height="70" rx="10" fill="#ffffff" stroke="#86efac"/>
-  <text class="s" x="480" y="275" text-anchor="middle" font-weight="600">預報層 /forecast_day</text>
+  <rect class="sub" x="352" y="250" width="256" height="70" rx="10"/>
+  <text class="h" x="480" y="275" text-anchor="middle">預報層 /forecast_day</text>
   <text class="l" x="480" y="294" text-anchor="middle">天氣・時段係數 → 逐小時推算</text>
   <text class="l" x="480" y="311" text-anchor="middle">剩餘車數（容量上下限 + 飽和修正）</text>
 
-  <!-- Taipei API -->
-  <rect class="box" x="730" y="60" width="200" height="110" fill="#eff6ff" stroke="#3b82f6"/>
+  <rect class="box" x="720" y="60" width="220" height="110" rx="14"/>
   <text class="t" x="830" y="92" text-anchor="middle">台北市開放資料</text>
   <text class="s" x="830" y="118" text-anchor="middle">YouBike 2.0 即時 API</text>
   <text class="s" x="830" y="138" text-anchor="middle">~1,600 站 · 每分鐘更新</text>
 
-  <!-- Local data -->
-  <rect class="box" x="730" y="220" width="200" height="120" fill="#fefce8" stroke="#ca8a04"/>
+  <rect class="box" x="720" y="220" width="220" height="120" rx="14"/>
   <text class="t" x="830" y="252" text-anchor="middle">Local Data 本地資料</text>
   <text class="s" x="830" y="278" text-anchor="middle">rf_*_model_quick.pkl</text>
   <text class="s" x="830" y="298" text-anchor="middle">stations.csv（後備清單）</text>
   <text class="s" x="830" y="318" text-anchor="middle">hourly / rain / temp CSV</text>
 
-  <!-- arrows -->
   <path class="ln" d="M230,185 L330,185"/>
   <text class="l" x="280" y="176" text-anchor="middle">/api/*</text>
   <path class="ln" d="M330,225 L230,225"/>
   <text class="l" x="280" y="243" text-anchor="middle">JSON</text>
-  <path class="ln" d="M730,125 L608,138"/>
-  <path class="ln" d="M730,280 L608,212"/>
+  <path class="ln" d="M720,125 L608,138"/>
+  <path class="ln" d="M720,280 L608,212"/>
 </svg>

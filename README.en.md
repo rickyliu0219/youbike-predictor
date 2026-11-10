@@ -34,7 +34,7 @@ Riders often arrive at a YouBike station to find no bikes, or no empty dock to r
 
 ## Architecture
 
-<img src="docs/architecture.png" width="100%" alt="Architecture">
+<img src="docs/architecture.en.png" width="100%" alt="Architecture">
 
 ### How the forecast works
 
@@ -125,5 +125,3 @@ youbike-predictor/
 ## Author
 
 **Yu-Kuan Liu** — Dept. of Electronic Engineering, National United University
-
-> For competition / educational use. Predictions are not guaranteed to be accurate.
