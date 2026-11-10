@@ -149,17 +149,43 @@ function Logo({ isDark }) {
   );
 }
 
+// ---------- 夜間模式配色 ----------
+// 所有夜間顏色集中在這裡；換配色只要改 DEFAULT_DARK（或網址加 ?dark=名稱 預覽）
+const DARK_PALETTES = {
+  graphite: { name: "石墨灰", bg1: "#141416", bg2: "#1c1c1f", card: "#1f2023", border: "rgba(255,255,255,0.08)",
+              input: "#26272b", soft: "rgba(255,255,255,0.05)", header: "rgba(20,20,22,0.82)",
+              text: "#ececee", sub: "#9a9aa1", accent: "#d4d4d8",
+              rent: "#e4e4e7", ret: "#8b8b93", remain: "#5f5f66", grid: "#2b2c30", axis: "#8a8a91", tooltip: "#202124" },
+  midnight: { name: "霧藍午夜", bg1: "#0e131c", bg2: "#151c28", card: "#18202d", border: "rgba(148,163,184,0.12)",
+              input: "#1e2736", soft: "rgba(143,176,214,0.07)", header: "rgba(14,19,28,0.82)",
+              text: "#e2e8f0", sub: "#8a96a8", accent: "#8fb0d6",
+              rent: "#a9c3e2", ret: "#5d7898", remain: "#6b7484", grid: "#243042", axis: "#7d8899", tooltip: "#18202d" },
+  warm:     { name: "暖炭", bg1: "#151311", bg2: "#1d1a17", card: "#221f1c", border: "rgba(255,240,220,0.08)",
+              input: "#2a2622", soft: "rgba(217,165,106,0.07)", header: "rgba(21,19,17,0.82)",
+              text: "#ede6dd", sub: "#a39a8f", accent: "#d9a56a",
+              rent: "#e0b07a", ret: "#8c7a66", remain: "#6b635a", grid: "#302b26", axis: "#8f857a", tooltip: "#24201d" },
+  forest:   { name: "墨綠", bg1: "#0f1412", bg2: "#151c19", card: "#1a221f", border: "rgba(200,230,215,0.08)",
+              input: "#212a26", soft: "rgba(140,191,163,0.07)", header: "rgba(15,20,18,0.82)",
+              text: "#e3ebe6", sub: "#8fa199", accent: "#8cbfa3",
+              rent: "#a3cfb6", ret: "#5e8574", remain: "#66706b", grid: "#25302b", axis: "#85948d", tooltip: "#1a221f" },
+};
+const DEFAULT_DARK = "warm";   // 選定：暖炭
+const darkVars = (p) => ({
+  "--d-bg1": p.bg1, "--d-bg2": p.bg2, "--d-card": p.card, "--d-border": p.border, "--d-input": p.input,
+  "--d-soft": p.soft, "--d-header": p.header, "--d-text": p.text, "--d-sub": p.sub, "--d-accent": p.accent,
+});
+
 // ---------- 時間軸：依小時決定時段名稱、天空顏色與圖示 ----------
 // 低飽和配色：只保留細微的色溫差（冷灰藍＝夜、暖灰＝晨昏、淡灰藍＝白天），不搶整體版面
-//   light / dark：分別給日間、夜間主題用的面板底色
+//   light / dark：分別給日間、夜間（暖炭）主題用的面板底色
 const DAY_PERIODS = [
-  { from: 0,  to: 4,  label: "深夜 / 凌晨", light: "#e3e6ec", dark: "#1f2533", Icon: Moon },
-  { from: 5,  to: 6,  label: "清晨 / 日出", light: "#eee8e3", dark: "#332f2e", Icon: Sunrise },
-  { from: 7,  to: 10, label: "上午",        light: "#e8edf1", dark: "#283240", Icon: Sun },
-  { from: 11, to: 13, label: "中午",        light: "#ecf0f3", dark: "#2b3542", Icon: Sun },
-  { from: 14, to: 16, label: "下午",        light: "#e9ecef", dark: "#29313d", Icon: Sun },
-  { from: 17, to: 18, label: "傍晚 / 日落", light: "#ede6e2", dark: "#342e2d", Icon: Sunset },
-  { from: 19, to: 23, label: "夜間",        light: "#e2e5eb", dark: "#222937", Icon: Moon },
+  { from: 0,  to: 4,  label: "深夜 / 凌晨", light: "#e3e6ec", dark: "#1d1a18", Icon: Moon },
+  { from: 5,  to: 6,  label: "清晨 / 日出", light: "#eee8e3", dark: "#302722", Icon: Sunrise },
+  { from: 7,  to: 10, label: "上午",        light: "#e8edf1", dark: "#2a2622", Icon: Sun },
+  { from: 11, to: 13, label: "中午",        light: "#ecf0f3", dark: "#2d2924", Icon: Sun },
+  { from: 14, to: 16, label: "下午",        light: "#e9ecef", dark: "#2b2723", Icon: Sun },
+  { from: 17, to: 18, label: "傍晚 / 日落", light: "#ede6e2", dark: "#332824", Icon: Sunset },
+  { from: 19, to: 23, label: "夜間",        light: "#e2e5eb", dark: "#201d1a", Icon: Moon },
 ];
 const periodOf = (h) => DAY_PERIODS.find((p) => h >= p.from && h <= p.to) || DAY_PERIODS[0];
 const WEEK = ["日", "一", "二", "三", "四", "五", "六"];
@@ -186,7 +212,7 @@ function TimeCard({ isDark, cardClass, neuTile, now, view, setView, hour, setHou
       {/* 標題列：右側是即時時鐘，點擊可跳回「現在」 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Calendar className={`w-5 h-5 ${isDark ? "text-cyan-300" : "text-gray-800"}`} />
+          <Calendar className={`w-5 h-5 ${isDark ? "yd-accent" : "text-gray-800"}`} />
           <h3 className="font-bold text-sm">時間設定</h3>
         </div>
         <button
@@ -303,6 +329,11 @@ function RefreshButton({ loading, onClick }) {
 export default function App() {
   // ===== 畫面狀態 =====
   const [isDarkMode, setIsDarkMode] = useState(false); // 預設日間（黑白灰）；true＝夜間（深色）
+  // 夜間配色：網址 ?dark=graphite|midnight|warm|forest 可預覽，否則用 DEFAULT_DARK
+  const pal = useMemo(() => {
+    const q = new URLSearchParams(window.location.search).get("dark");
+    return DARK_PALETTES[q] || DARK_PALETTES[DEFAULT_DARK];
+  }, []);
   const [stations, setStations] = useState([]);        // 全部站點清單
   const [stationId, setStationId] = useState("");      // 目前選取的站點
   const [searchText, setSearchText] = useState("");    // 站名／站號搜尋字
@@ -586,46 +617,42 @@ export default function App() {
     { name: "空位", value: realtime.remain_slots },
   ] : [];
 
-  // ====== 主題樣式（夜間=原本藍青；日間=黑白灰） ======
-  const bgClass = isDarkMode
-    ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
-    : "bg-gradient-to-br from-gray-50 via-gray-100 to-white";
-  const cardClass = isDarkMode
-    ? "bg-white/10 backdrop-blur-xl border-white/20"
-    : "bg-white border-gray-200";
-  const textPrimary = isDarkMode ? "text-white" : "text-gray-900";
-  const textSecondary = isDarkMode ? "text-slate-300" : "text-gray-600";
-  const accentColor = isDarkMode ? "text-cyan-300" : "text-gray-900";
-  const inputBg = isDarkMode ? "bg-white/5 border-white/20 backdrop-blur-sm" : "bg-white border-gray-300";
+  // ====== 主題樣式（日間＝黑白灰；夜間＝DARK_PALETTES 中選定的配色，CSS 類別定義在 index.css） ======
+  const bgClass = isDarkMode ? "yd-bg" : "bg-gradient-to-br from-gray-50 via-gray-100 to-white";
+  const cardClass = isDarkMode ? "yd-card" : "bg-white border-gray-200";
+  const textPrimary = isDarkMode ? "yd-text" : "text-gray-900";
+  const textSecondary = isDarkMode ? "yd-sub" : "text-gray-600";
+  const accentColor = isDarkMode ? "yd-accent" : "text-gray-900";
+  const inputBg = isDarkMode ? "yd-input" : "bg-white border-gray-300";
 
-  // charts（日間顏色→黑灰；夜間維持原樣）
+  // 圖表顏色（日間黑灰；夜間取自配色）
   const chartStroke = {
-    axis: isDarkMode ? "#94a3b8" : "#111827",
-    grid: isDarkMode ? "#334155" : "#e5e7eb",
-    rent: isDarkMode ? "#06b6d4" : "#111827",
-    ret: isDarkMode ? "#38bdf8" : "#6b7280",
-    remain: isDarkMode ? "#94a3b8" : "#9ca3af",
-    barRent: isDarkMode ? "#06b6d4" : "#111827",
-    barRet: isDarkMode ? "#38bdf8" : "#6b7280",
-    pieUse: isDarkMode ? "#06b6d4" : "#111827",
-    pieSlot: isDarkMode ? "#64748b" : "#d1d5db",
+    axis: isDarkMode ? pal.axis : "#111827",
+    grid: isDarkMode ? pal.grid : "#e5e7eb",
+    rent: isDarkMode ? pal.rent : "#111827",
+    ret: isDarkMode ? pal.ret : "#6b7280",
+    remain: isDarkMode ? pal.remain : "#9ca3af",
+    barRent: isDarkMode ? pal.rent : "#111827",
+    barRet: isDarkMode ? pal.ret : "#6b7280",
+    pieUse: isDarkMode ? pal.rent : "#111827",
+    pieSlot: isDarkMode ? pal.grid : "#d1d5db",
   };
 
   // ====== 共用 Tooltip 樣式（避免黑底黑字） ======
   const tooltipStyle = {
     contentStyle: {
-      backgroundColor: isDarkMode ? "rgba(15,23,42,0.95)" : "#ffffff", // 夜間深藍黑 / 日間白
-      border: `1px solid ${isDarkMode ? "#334155" : "#e5e7eb"}`,
+      backgroundColor: isDarkMode ? pal.tooltip : "#ffffff",
+      border: `1px solid ${isDarkMode ? pal.grid : "#e5e7eb"}`,
       borderRadius: 12,
       boxShadow: isDarkMode ? "0 8px 24px rgba(0,0,0,0.40)" : "0 8px 24px rgba(0,0,0,0.08)",
-      color: isDarkMode ? "#e5e7eb" : "#111827",
+       color: isDarkMode ? pal.text : "#111827",
       padding: 10,
     },
     itemStyle: {
-      color: isDarkMode ? "#e5e7eb" : "#111827",
+       color: isDarkMode ? pal.text : "#111827",
     },
     labelStyle: {
-      color: isDarkMode ? "#e5e7eb" : "#111827",
+       color: isDarkMode ? pal.text : "#111827",
       fontWeight: 600,
     },
     wrapperStyle: { outline: "none" },
@@ -659,8 +686,8 @@ export default function App() {
   };
 
   return (
-    <div className={`${isDarkMode ? "theme-dark" : "theme-light"} min-h-screen ${bgClass} ${textPrimary}`}>
-      <div className={`sticky top-0 z-50 backdrop-blur-xl ${isDarkMode ? 'bg-slate-950/70 shadow-[0_6px_20px_rgba(0,0,0,0.35)]' : 'bg-white/85 shadow-[0_6px_20px_rgba(0,0,0,0.06)]'}`}>
+    <div className={`${isDarkMode ? "theme-dark" : "theme-light"} min-h-screen ${bgClass} ${textPrimary}`} style={isDarkMode ? darkVars(pal) : undefined}>
+      <div className={`sticky top-0 z-50 backdrop-blur-xl ${isDarkMode ? 'yd-header shadow-[0_6px_20px_rgba(0,0,0,0.35)]' : 'bg-white/85 shadow-[0_6px_20px_rgba(0,0,0,0.06)]'}`}>
         <div className="max-w-[1920px] mx-auto px-6 py-3 flex items-center justify-between">
           <Logo isDark={isDarkMode} />
           <div className="flex items-center gap-3">
@@ -682,7 +709,7 @@ export default function App() {
                 <h3 className="font-bold text-sm">常用站點</h3>
                 <button
                   onClick={() => { setFavorites([]); localStorage.setItem(LS_FAV_KEY, "[]"); }}
-                  className={`neu-press text-xs underline ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}
+                  className={`neu-press text-xs underline ${isDarkMode ? 'yd-sub' : 'text-gray-600'}`}
                 >
                   清空
                 </button>
@@ -694,13 +721,13 @@ export default function App() {
                     .map(st => (
                       <div key={st.station_id}
                         className={`neu-press group inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs cursor-pointer
-                          ${isDarkMode ? 'bg-white/5 hover:bg-white/10 border-white/15' : 'bg-gray-50 hover:bg-gray-100 border-gray-200'}`}
+                          ${isDarkMode ? 'yd-soft yd-border' : 'bg-gray-50 hover:bg-gray-100 border-gray-200'}`}
                         onClick={() => setStationId(String(st.station_id))}
                       >
                         <span className="font-medium">{st.station_name}</span>
                         <button
                           onClick={(e) => { e.stopPropagation(); toggleFav(st.station_id); }}
-                          className={`${isDarkMode ? 'text-slate-300' : 'text-gray-500'} opacity-70 group-hover:opacity-100`}
+                          className={`${isDarkMode ? 'yd-sub' : 'text-gray-500'} opacity-70 group-hover:opacity-100`}
                           title="移除常用"
                         >
                           ×
@@ -713,7 +740,7 @@ export default function App() {
 
             <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
               <div className="flex items-center gap-2 mb-4">
-                <MapPin className={`w-5 h-5 ${isDarkMode ? 'text-cyan-300' : 'text-gray-800'}`} />
+                <MapPin className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'text-gray-800'}`} />
                 <h3 className="font-bold text-sm">站點選擇</h3>
               </div>
               <div className="space-y-3">
@@ -743,9 +770,9 @@ export default function App() {
                     onClick={() => toggleFav(stationId)}
                     title={isFav(stationId) ? "從常用移除" : "加入常用"}
                     className={`neu-press shrink-0 px-3 py-2 rounded-xl border
-                      ${isDarkMode ? 'bg-white/10 hover:bg-white/20 border-white/20' : 'bg-gray-100 hover:bg-gray-200 border-gray-300'}`}
+                      ${isDarkMode ? 'yd-soft yd-border' : 'bg-gray-100 hover:bg-gray-200 border-gray-300'}`}
                   >
-                    <span className={`text-lg ${isFav(stationId) ? (isDarkMode ? 'text-yellow-300' : 'text-yellow-500') : (isDarkMode ? 'text-slate-300' : 'text-gray-500')}`}>
+                    <span className={`text-lg ${isFav(stationId) ? (isDarkMode ? 'text-yellow-300' : 'text-yellow-500') : (isDarkMode ? 'yd-sub' : 'text-gray-500')}`}>
                       ★
                     </span>
                   </button>
@@ -755,7 +782,7 @@ export default function App() {
 
             <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
               <div className="flex items-center gap-2 mb-4">
-                <Cloud className={`w-5 h-5 ${isDarkMode ? 'text-cyan-300' : 'text-gray-800'}`} />
+                <Cloud className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'text-gray-800'}`} />
                 <h3 className="font-bold text-sm">天氣設定</h3>
               </div>
               {/* 天氣情境卡片：圖示在上、文字在下；選取中的卡片凸起並顯示勾勾 */}
@@ -824,11 +851,11 @@ export default function App() {
                   <div className={`text-sm ${textSecondary} mt-2`}>可借車輛</div>
                 </div>
                 <div className="text-center">
-                  <div className={`text-5xl font-bold ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>{realtime?.remain_slots ?? "—"}</div>
+                  <div className={`text-5xl font-bold ${isDarkMode ? 'yd-sub' : 'text-gray-500'}`}>{realtime?.remain_slots ?? "—"}</div>
                   <div className={`text-sm ${textSecondary} mt-2`}>可停車格</div>
                 </div>
                 <div className="text-center">
-                  <div className={`text-5xl font-bold ${isDarkMode ? 'text-cyan-400' : 'text-gray-800'}`}>{realtime?.capacity ?? "—"}</div>
+                  <div className={`text-5xl font-bold ${isDarkMode ? 'yd-accent' : 'text-gray-800'}`}>{realtime?.capacity ?? "—"}</div>
                   <div className={`text-sm ${textSecondary} mt-2`}>總容量</div>
                 </div>
               </div>
@@ -914,7 +941,7 @@ export default function App() {
           <div className="col-span-12 lg:col-span-3 space-y-6">
             <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
               <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle className={`w-5 h-5 ${isDarkMode ? 'text-amber-300' : 'text-gray-800'}`} />
+                <AlertTriangle className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'text-gray-800'}`} />
                 <h3 className="font-bold text-sm">風險評估</h3>
               </div>
               {risk ? (
@@ -924,7 +951,7 @@ export default function App() {
                       <span className="text-sm">缺車風險</span>
                       <span className="text-lg font-bold">{risk.stockout.level}</span>
                     </div>
-                    <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-white/10' : 'bg-gray-200'}`}>
+                    <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'yd-soft' : 'bg-gray-200'}`}>
                       <div className={`h-full ${riskBarClass(risk.stockout.level)}`} style={{ width: `${risk.stockout.score * 100}%` }} />
                     </div>
                   </div>
@@ -933,7 +960,7 @@ export default function App() {
                       <span className="text-sm">滿車風險</span>
                       <span className="text-lg font-bold">{risk.full.level}</span>
                     </div>
-                    <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-white/10' : 'bg-gray-200'}`}>
+                    <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'yd-soft' : 'bg-gray-200'}`}>
                       <div className={`h-full ${riskBarClass(risk.full.level)}`} style={{ width: `${risk.full.score * 100}%` }} />
                     </div>
                   </div>
@@ -943,22 +970,22 @@ export default function App() {
 
             <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
               <div className="flex items-center gap-2 mb-4">
-                <Leaf className={`w-5 h-5 ${isDarkMode ? 'text-green-300' : 'text-gray-800'}`} />
+                <Leaf className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'text-gray-800'}`} />
                 <h3 className="font-bold text-sm">環境效益</h3>
               </div>
               <div className="space-y-4">
                 <div className={`text-center py-4 rounded-xl ${
-                  isDarkMode ? 'bg-green-400/10 border border-green-400/20' : 'bg-gray-50 border border-gray-200'
+                  isDarkMode ? 'yd-soft border yd-border' : 'bg-gray-50 border border-gray-200'
                 }`}>
-                  <div className={`${isDarkMode ? 'text-green-300' : 'text-gray-900'} text-3xl font-bold`}>{Math.round(eco.trips)}</div>
+                  <div className={`${isDarkMode ? 'yd-accent' : 'text-gray-900'} text-3xl font-bold`}>{Math.round(eco.trips)}</div>
                   <div className={`text-xs ${textSecondary} mt-1`}>預測騎乘趟數</div>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className={`flex justify-between p-2 rounded-lg ${isDarkMode ? 'bg-green-400/10' : 'bg-gray-50'}`}>
+                  <div className={`flex justify-between p-2 rounded-lg ${isDarkMode ? 'yd-soft' : 'bg-gray-50'}`}>
                     <span>vs 機車</span>
                     <span className="font-bold">-{eco.saveScooter.toFixed(1)} kg CO₂</span>
                   </div>
-                  <div className={`flex justify-between p-2 rounded-lg ${isDarkMode ? 'bg-green-400/10' : 'bg-gray-50'}`}>
+                  <div className={`flex justify-between p-2 rounded-lg ${isDarkMode ? 'yd-soft' : 'bg-gray-50'}`}>
                     <span>vs 汽車</span>
                     <span className="font-bold">-{eco.saveCar.toFixed(1)} kg CO₂</span>
                   </div>
@@ -969,7 +996,7 @@ export default function App() {
             {selectedStation && (
               <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
                 <div className="flex items-center gap-2 mb-4">
-                  <MapPin className={`w-5 h-5 ${isDarkMode ? 'text-pink-300' : 'text-gray-800'}`} />
+                  <MapPin className={`w-5 h-5 ${isDarkMode ? 'yd-accent' : 'text-gray-800'}`} />
                   <h3 className="font-bold text-sm">站點資訊</h3>
                 </div>
                 <div className="space-y-2 text-sm">

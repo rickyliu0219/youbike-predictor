@@ -223,3 +223,17 @@ a {
 @media (prefers-reduced-motion: reduce) {
   .yb-pop, .yb-slide-in, .yb-icon-in { animation: none; }
 }
+
+/* =============================================================
+   夜間配色類別：顏色來自 App.jsx 的 DARK_PALETTES（以 CSS 變數注入）
+   ============================================================= */
+.yd-bg     { background: linear-gradient(135deg, var(--d-bg1), var(--d-bg2) 50%, var(--d-bg1)); }
+.yd-card   { background: var(--d-card); border-color: var(--d-border); }
+.yd-header { background: var(--d-header); }
+.yd-input  { background: var(--d-input); border-color: var(--d-border); }
+.yd-soft   { background: var(--d-soft); }
+.yd-border { border-color: var(--d-border); }
+.yd-text   { color: var(--d-text); }
+.yd-sub    { color: var(--d-sub); }
+.yd-accent { color: var(--d-accent); }
+.theme-dark .recharts-default-tooltip { background: var(--d-card) !important; border-color: var(--d-border) !important; }
