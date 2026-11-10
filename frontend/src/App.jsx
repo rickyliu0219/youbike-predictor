@@ -150,14 +150,16 @@ function Logo({ isDark }) {
 }
 
 // ---------- 時間軸：依小時決定時段名稱、天空顏色與圖示 ----------
+// 低飽和配色：只保留細微的色溫差（冷灰藍＝夜、暖灰＝晨昏、淡灰藍＝白天），不搶整體版面
+//   light / dark：分別給日間、夜間主題用的面板底色
 const DAY_PERIODS = [
-  { from: 0,  to: 4,  label: "深夜 / 凌晨", sky: "#1c2541", Icon: Moon },
-  { from: 5,  to: 6,  label: "清晨 / 日出", sky: "#c07a63", Icon: Sunrise },
-  { from: 7,  to: 10, label: "上午",        sky: "#3d7fb0", Icon: Sun },
-  { from: 11, to: 13, label: "中午",        sky: "#3a8bc9", Icon: Sun },
-  { from: 14, to: 16, label: "下午",        sky: "#4a7eab", Icon: Sun },
-  { from: 17, to: 18, label: "傍晚 / 日落", sky: "#b0614c", Icon: Sunset },
-  { from: 19, to: 23, label: "夜間",        sky: "#1f3358", Icon: Moon },
+  { from: 0,  to: 4,  label: "深夜 / 凌晨", light: "#e3e6ec", dark: "#1f2533", Icon: Moon },
+  { from: 5,  to: 6,  label: "清晨 / 日出", light: "#eee8e3", dark: "#332f2e", Icon: Sunrise },
+  { from: 7,  to: 10, label: "上午",        light: "#e8edf1", dark: "#283240", Icon: Sun },
+  { from: 11, to: 13, label: "中午",        light: "#ecf0f3", dark: "#2b3542", Icon: Sun },
+  { from: 14, to: 16, label: "下午",        light: "#e9ecef", dark: "#29313d", Icon: Sun },
+  { from: 17, to: 18, label: "傍晚 / 日落", light: "#ede6e2", dark: "#342e2d", Icon: Sunset },
+  { from: 19, to: 23, label: "夜間",        light: "#e2e5eb", dark: "#222937", Icon: Moon },
 ];
 const periodOf = (h) => DAY_PERIODS.find((p) => h >= p.from && h <= p.to) || DAY_PERIODS[0];
 const WEEK = ["日", "一", "二", "三", "四", "五", "六"];
@@ -215,18 +217,21 @@ function TimeCard({ isDark, cardClass, neuTile, now, view, setView, hour, setHou
 
       {/* 天空面板：背景色依時段漸變 */}
       <div
-        className="relative overflow-hidden rounded-2xl px-4 py-3.5 text-white"
+        className="relative overflow-hidden rounded-2xl px-4 py-3.5"
         style={{
-          backgroundColor: period.sky,
+          backgroundColor: isDark ? period.dark : period.light,
+          color: isDark ? "#e5e7eb" : "#1f2937",
           transition: "background-color .7s ease",
+          // 與天氣卡片一致的擬物內凹感
+          border: `1.5px solid ${isDark ? "rgba(255,255,255,.10)" : "#ffffff"}`,
           boxShadow: isDark
-            ? "inset 0 1px 0 rgba(255,255,255,.12), 0 4px 14px rgba(0,0,0,.35)"
-            : "inset 0 1px 0 rgba(255,255,255,.25), 0 4px 14px rgba(0,0,0,.15)",
+            ? "inset 2px 2px 6px rgba(0,0,0,.35), inset -1px -1px 3px rgba(255,255,255,.04)"
+            : "inset 2px 2px 6px rgba(0,0,0,.06), inset -2px -2px 6px rgba(255,255,255,.8)",
         }}
       >
         {/* 光暈：讓面板有一點天空層次 */}
         <div className="pointer-events-none absolute -top-10 -right-8 w-40 h-40 rounded-full"
-             style={{ background: "radial-gradient(circle, rgba(255,255,255,.22), transparent 70%)" }} />
+             style={{ background: `radial-gradient(circle, rgba(255,255,255,${isDark ? .05 : .55}), transparent 70%)` }} />
         <div className="relative flex items-start justify-between">
           <div>
             <div key={view} className="yb-slide-in text-[11px] opacity-80">模擬時間 · {sel.md}（{sel.wd}）</div>
@@ -235,13 +240,13 @@ function TimeCard({ isDark, cardClass, neuTile, now, view, setView, hour, setHou
             </div>
             <div key={period.label} className="yb-slide-in text-xs font-semibold mt-2 opacity-90">{period.label}</div>
           </div>
-          <PIcon key={period.label + "i"} className="yb-icon-in w-9 h-9" style={{ color: "#fde68a" }} strokeWidth={1.8} />
+          <PIcon key={period.label + "i"} className="yb-icon-in w-9 h-9" style={{ color: isDark ? "#a8a29e" : "#9ca3af" }} strokeWidth={1.6} />
         </div>
         {/* 該小時的預測值（來自折線圖資料） */}
         <div className="relative mt-3 grid grid-cols-3 gap-2 text-center">
           {[["借出", atHour?.rent], ["歸還", atHour?.ret], ["剩餘", atHour?.remain]].map(([k, v]) => (
-            <div key={k} className="rounded-xl py-1.5" style={{ background: "rgba(255,255,255,.14)" }}>
-              <div className="text-[10px] opacity-80">{k}</div>
+            <div key={k} className="rounded-xl py-1.5" style={{ background: isDark ? "rgba(255,255,255,.05)" : "rgba(255,255,255,.7)" }}>
+              <div className="text-[10px] opacity-60">{k}</div>
               <div key={`${k}${hour}${view}`} className="yb-pop text-sm font-bold tabular-nums">{fmt(v)}</div>
             </div>
           ))}
