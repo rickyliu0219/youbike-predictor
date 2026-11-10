@@ -56,8 +56,8 @@ function TheMap({ isDark, center, accent, nearby, onSelect, zoom = 16, interacti
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
       <FlyTo center={center} />
       {nearby.map((s) => (
-        <CircleMarker key={s.station_id} center={[s.lat, s.lon]} radius={6}
-          pathOptions={{ color: "#fff", weight: 2, fillColor: accent, fillOpacity: 0.55 }}
+        <CircleMarker key={s.station_id} center={[s.lat, s.lon]} radius={7}
+          pathOptions={{ color: "#fff", weight: 2.5, fillColor: accent, fillOpacity: 0.9 }}
           eventHandlers={{ click: () => onSelect(String(s.station_id)) }}>
           <Tooltip direction="top" offset={[0, -6]}>{shortName(s.station_name)}・{Math.round(s.dist)} m</Tooltip>
         </CircleMarker>
