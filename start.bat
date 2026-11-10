@@ -16,7 +16,9 @@ if not exist venv\Scripts\python.exe (
 
 echo [1/3] 啟動後端 FastAPI (http://127.0.0.1:8000) ...
 REM 用 venv 裡的 python 執行 uvicorn，不依賴系統全域套件
-start "YouBike Backend" /D "%~dp0backend" cmd /k ..\venv\Scripts\python.exe -m uvicorn main:app --port 8000
+REM --reload：backend\ 裡的 .py 一存檔就自動重新載入，不用重開 start.bat
+REM （只監看 backend\ 資料夾，避免 venv、node_modules 變動造成不必要的重啟）
+start "YouBike Backend" /D "%~dp0backend" cmd /k ..\venv\Scripts\python.exe -m uvicorn main:app --port 8000 --reload --reload-dir .
 
 REM 等後端載入模型：最多等 30 秒，每秒檢查一次 8000 port 是否已在監聽
 echo       等待後端就緒 ...
