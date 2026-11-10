@@ -17,7 +17,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
-import { Bike, Clock, MapPin, RefreshCw, Loader2, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar, Sun, CloudFog, CloudRain, CloudLightning, CircleCheck } from "lucide-react";
+import { Bike, Clock, MapPin, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar, Sun, CloudFog, CloudRain, CloudLightning } from "lucide-react";
 
 // ---------- 常數與小工具 ----------
 const API = "/api";                                   // 後端 API 前綴（經 Vite 代理）
@@ -54,7 +54,7 @@ function ThemeToggle({ isDark, onToggle }) {
       aria-checked={isDark}
       aria-label={isDark ? "切換為日間模式" : "切換為夜間模式"}
       onClick={onToggle}
-      className="relative shrink-0 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+      className="neu-switch relative shrink-0 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
       style={{
         width: W,
         height: H,
@@ -79,7 +79,7 @@ function ThemeToggle({ isDark, onToggle }) {
 
       {/* 旋鈕：凸起的白色圓形，內含太陽／月亮 */}
       <span
-        className="absolute top-1/2 rounded-full flex items-center justify-center transition-transform duration-300 ease-out"
+        className="neu-knob absolute top-1/2 rounded-full flex items-center justify-center"
         style={{
           left: PAD - 2,
           width: KNOB,
@@ -104,6 +104,33 @@ function ThemeToggle({ isDark, onToggle }) {
           )
           : <Sun className="w-[18px] h-[18px]" style={{ color: "#8f8f8f" }} strokeWidth={2} />}
       </span>
+    </button>
+  );
+}
+
+// ---------- 更新按鈕：與日夜切換開關同風格的圓形擬物按鈕，只放圖示 ----------
+// 滑鼠移入：圖示順時針轉半圈；按下：按鈕凹陷；載入中：圖示持續旋轉
+function RefreshButton({ loading, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={loading}
+      aria-label="更新預測"
+      title="更新預測"
+      className="neu-round group shrink-0 w-11 h-11 rounded-full flex items-center justify-center disabled:cursor-wait"
+    >
+      {/* 兩段粗弧線 + 實心箭頭，呈 180° 旋轉對稱 */}
+      <svg
+        viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"
+        className={`transition-transform duration-500 ease-out ${loading ? "animate-spin" : "group-hover:rotate-180"}`}
+        fill="#8f8f8f" stroke="#8f8f8f"
+      >
+        <path d="M7.98 6.27 A7 7 0 0 1 19.00 12.00" fill="none" strokeWidth="2.6" />
+        <polygon points="19.00 15.60 22.40 12.00 15.60 12.00" stroke="none" />
+        <path d="M16.02 17.73 A7 7 0 0 1 5.00 12.00" fill="none" strokeWidth="2.6" />
+        <polygon points="5.00 8.40 1.60 12.00 8.40 12.00" stroke="none" />
+      </svg>
     </button>
   );
 }
@@ -477,11 +504,7 @@ export default function App() {
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle isDark={isDarkMode} onToggle={() => setIsDarkMode(!isDarkMode)} />
-            <button onClick={runAll} disabled={loadingAll}
-              className={`px-4 py-2 ${primaryBtn} text-white rounded-xl flex items-center gap-2 text-sm font-medium disabled:opacity-50 shadow-lg transition`}>
-              {loadingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              更新
-            </button>
+            <RefreshButton loading={loadingAll} onClick={runAll} />
           </div>
         </div>
       </div>
@@ -498,7 +521,7 @@ export default function App() {
                 <h3 className="font-bold text-sm">常用站點</h3>
                 <button
                   onClick={() => { setFavorites([]); localStorage.setItem(LS_FAV_KEY, "[]"); }}
-                  className={`text-xs underline ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}
+                  className={`neu-press text-xs underline ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}
                 >
                   清空
                 </button>
@@ -509,7 +532,7 @@ export default function App() {
                     .filter(Boolean)
                     .map(st => (
                       <div key={st.station_id}
-                        className={`group inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs cursor-pointer
+                        className={`neu-press group inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs cursor-pointer
                           ${isDarkMode ? 'bg-white/5 hover:bg-white/10 border-white/15' : 'bg-gray-50 hover:bg-gray-100 border-gray-200'}`}
                         onClick={() => setStationId(String(st.station_id))}
                       >
@@ -558,7 +581,7 @@ export default function App() {
                     type="button"
                     onClick={() => toggleFav(stationId)}
                     title={isFav(stationId) ? "從常用移除" : "加入常用"}
-                    className={`shrink-0 px-3 py-2 rounded-xl border transition
+                    className={`neu-press shrink-0 px-3 py-2 rounded-xl border
                       ${isDarkMode ? 'bg-white/10 hover:bg-white/20 border-white/20' : 'bg-gray-100 hover:bg-gray-200 border-gray-300'}`}
                   >
                     <span className={`text-lg ${isFav(stationId) ? (isDarkMode ? 'text-yellow-300' : 'text-yellow-500') : (isDarkMode ? 'text-slate-300' : 'text-gray-500')}`}>
@@ -585,14 +608,11 @@ export default function App() {
                       type="button"
                       aria-pressed={active}
                       onClick={() => { setRainMm(rain_mm); setTempC(clamp(temp, 0, 50)); }}
-                      className="flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 transition-all duration-200"
+                      className="neu-press flex flex-col items-center justify-center gap-1 rounded-2xl py-3"
                       style={neuTile(active)}
                     >
                       <p.Icon className="w-5 h-5" strokeWidth={1.6} />
                       <span className={`text-[11px] ${active ? 'font-bold' : 'font-medium'}`}>{name}</span>
-                      {/* 勾勾位置固定保留，避免選取時卡片高度跳動 */}
-                      <CircleCheck className={`w-3.5 h-3.5 transition-opacity ${active ? 'opacity-100' : 'opacity-0'}`}
-                        style={{ color: isDarkMode ? '#4ade80' : '#16a34a' }} strokeWidth={2} />
                     </button>
                   );
                 })}
@@ -641,7 +661,7 @@ export default function App() {
               <div className="grid grid-cols-3 gap-2 mt-4">
                 {[["next6", "6小時"], ["next12", "12小時"], ["today", "今日"], ["tomorrow", "明日"], ["dayafter", "後日"]].map(([k, label]) => (
                   <button key={k} onClick={() => setRangeView(k)}
-                    className={`px-2 py-1.5 text-xs rounded-xl font-medium shadow transition ${
+                    className={`neu-press px-2 py-1.5 text-xs rounded-xl font-medium shadow ${
                       rangeView === k ? `${primaryBtn} text-white`
                       : isDarkMode
                         ? 'bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20'
@@ -659,14 +679,6 @@ export default function App() {
             <div className={`${cardClass} border rounded-2xl p-6 shadow-xl`}>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold">即時狀態</h2>
-                <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
-                  isDarkMode
-                    ? 'bg-green-400/20 text-green-300 border border-green-400/30'
-                    : 'bg-gray-200 text-gray-700 border border-gray-300'
-                }`}>
-                  <div className={`w-2 h-2 rounded-full animate-pulse ${isDarkMode ? 'bg-green-400' : 'bg-gray-900'}`} />
-                  LIVE
-                </div>
               </div>
               <div className="grid grid-cols-3 gap-6 mb-6">
                 <div className="text-center">
@@ -707,7 +719,6 @@ export default function App() {
             <div className={`${cardClass} border rounded-2xl p-6 shadow-xl`}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold">即時預測</h2>
-                <div className={`text-xs ${textSecondary}`}>RandomForest 模型預測</div>
               </div>
               <div className="h-80">
                 <ResponsiveContainer>

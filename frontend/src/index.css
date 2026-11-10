@@ -143,3 +143,52 @@ a {
 }
 .neu-range:active::-webkit-slider-thumb { transform: scale(1.08); }
 .neu-range:focus-visible { box-shadow: 0 0 0 3px rgba(34,211,238,.5); }
+
+/* =============================================================
+   滑鼠互動動畫
+   ============================================================= */
+
+/* 通用按鈕：移入微微浮起、按下縮小下沉 */
+.neu-press {
+  transition: transform .18s cubic-bezier(.2,.8,.2,1), filter .18s ease, box-shadow .18s ease;
+  will-change: transform;
+}
+.neu-press:hover  { transform: translateY(-2px); filter: brightness(1.04); }
+.neu-press:active { transform: translateY(0) scale(.95); filter: brightness(.97); transition-duration: .08s; }
+.neu-press:focus-visible { outline: 2px solid rgba(34,211,238,.6); outline-offset: 2px; }
+
+/* 圓形擬物按鈕（更新）：外觀同日夜切換開關的旋鈕 */
+.neu-round {
+  background: linear-gradient(145deg, #ffffff, #e6e6e6);
+  border: 2px solid #ffffff;
+  box-shadow: 2px 2px 6px rgba(0,0,0,.22), -1px -1px 3px rgba(255,255,255,.8);
+  transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease;
+}
+.neu-round:hover  { transform: translateY(-2px); box-shadow: 3px 4px 10px rgba(0,0,0,.26), -1px -1px 3px rgba(255,255,255,.8); }
+.neu-round:active { transform: scale(.94); box-shadow: inset 2px 2px 5px rgba(0,0,0,.18), inset -2px -2px 4px rgba(255,255,255,.9); transition-duration: .08s; }
+.neu-round:focus-visible { outline: 2px solid rgba(34,211,238,.6); outline-offset: 2px; }
+
+/* 日夜切換開關：移入時旋鈕稍微放大、按下時壓扁 */
+.neu-switch .neu-knob { transition: transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease; }
+.neu-switch:hover .neu-knob  { box-shadow: 3px 3px 9px rgba(0,0,0,.32), -1px -1px 3px rgba(255,255,255,.8); }
+.neu-switch:active .neu-knob { box-shadow: 1px 1px 3px rgba(0,0,0,.3); }
+.neu-switch:hover  { filter: brightness(1.03); }
+
+/* 滑桿：移入時軌道變亮、旋鈕放大；拖曳中旋鈕再放大並出現光暈 */
+.neu-range { transition: filter .2s ease; }
+.neu-range:hover { filter: brightness(1.06); }
+.neu-range::-webkit-slider-thumb { transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease; }
+.neu-range:hover::-webkit-slider-thumb  { transform: scale(1.12); }
+.neu-range:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 6px rgba(160,160,160,.25), 2px 2px 8px rgba(0,0,0,.3);
+}
+.neu-range::-moz-range-thumb { transition: transform .18s ease, box-shadow .18s ease; }
+.neu-range:hover::-moz-range-thumb  { transform: scale(1.12); }
+.neu-range:active::-moz-range-thumb { transform: scale(1.2); box-shadow: 0 0 0 6px rgba(160,160,160,.25); }
+
+/* 減少動態偏好：關掉位移動畫 */
+@media (prefers-reduced-motion: reduce) {
+  .neu-press, .neu-round, .neu-switch .neu-knob, .neu-range::-webkit-slider-thumb { transition: none !important; }
+  .neu-press:hover, .neu-round:hover { transform: none; }
+}
