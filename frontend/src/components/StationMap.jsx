@@ -1,10 +1,10 @@
 // src/components/StationMap.jsx
 // =============================================================
-// 站點地圖卡片（Leaflet + OpenStreetMap 底圖，免 API 金鑰）
+// 站點地圖卡片（Leaflet + Esri Canvas 灰階底圖，免 API 金鑰）
 //
 // - 選定站點以主題色大頭針標示；周邊 800 m 內其他站點以小圓點顯示，點一下即可切換站點
-// - 底圖用 OpenStreetMap 標準圖磚，再以 CSS 濾鏡依日／夜模式調成低飽和、貼近主題的色調
-//   （夜間用反相＋色相旋轉做出深色地圖；CARTO 等深色底圖現在需要 API 金鑰）
+// - 底圖用 Esri「Light / Dark Gray Canvas」：只有道路、水域與街名，沒有商家和 POI 圖示，畫面乾淨
+//   底圖與街名是兩層，依日／夜模式切換，再用 CSS 濾鏡微調成貼近主題的色調
 // - 「一鍵導航」：開啟 Google 地圖步行路線（手機上會直接跳 Google Maps App）
 // - 「放大」：全螢幕檢視，Esc 或點背景關閉
 // =============================================================
@@ -46,7 +46,8 @@ function FlyTo({ center }) {
 }
 
 function TheMap({ isDark, center, accent, nearby, onSelect, zoom = 16, interactive = true }) {
-  const tiles = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const tone = isDark ? "Dark" : "Light";
+  const esri = (layer) => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${tone}_Gray_${layer}/MapServer/tile/{z}/{y}/{x}`;
   // 主題 class 放在外層 div：MapContainer 掛載後不會再更新 className，切換日夜時才會生效
   return (
     <div className={`h-full w-full ${isDark ? "yb-map-dark" : "yb-map-light"}`}>
@@ -54,8 +55,10 @@ function TheMap({ isDark, center, accent, nearby, onSelect, zoom = 16, interacti
       center={center} zoom={zoom} scrollWheelZoom={interactive} zoomControl={interactive}
       attributionControl className="h-full w-full"
     >
-      <TileLayer url={tiles} maxZoom={19}
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
+      {/* key 隨日夜改變 → 切換主題時重新載入對應的圖磚 */}
+      <TileLayer key={`base-${tone}`} url={esri("Base")} maxNativeZoom={16} maxZoom={19}
+        attribution="Tiles &copy; Esri" />
+      <TileLayer key={`ref-${tone}`} url={esri("Reference")} maxNativeZoom={16} maxZoom={19} />
       <FlyTo center={center} />
       {nearby.map((s) => (
         <CircleMarker key={s.station_id} center={[s.lat, s.lon]} radius={7}

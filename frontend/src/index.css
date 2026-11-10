@@ -272,10 +272,9 @@ a {
 .yb-chips { scrollbar-width: none; }
 .yb-chips::-webkit-scrollbar { display: none; }
 
-/* 地圖底圖濾鏡：把彩色的 OSM 圖磚調成低飽和、貼近主題的色調 */
-.yb-map-light .leaflet-tile-pane { filter: grayscale(.85) sepia(.12) brightness(1.04) contrast(.92); }
-/* 夜間：反相變深色，再旋轉色相讓水域維持藍灰、加一點暖色貼近「暖炭」 */
-.yb-map-dark  .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) grayscale(.7) sepia(.3) brightness(.85) contrast(.9); }
+/* 地圖底圖濾鏡：Esri 灰階底圖本身就很乾淨，只加一點暖色調貼近主題 */
+.yb-map-light .leaflet-tile-pane { filter: sepia(.12) brightness(1.02); }
+.yb-map-dark  .leaflet-tile-pane { filter: sepia(.35) saturate(.8) brightness(1.1); }
 .leaflet-container { font-family: inherit; background: transparent; }
 .yb-pin { background: none; border: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); }
 .theme-dark .leaflet-tooltip { background: var(--d-card); color: var(--d-text); border-color: var(--d-border); }
