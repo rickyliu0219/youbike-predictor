@@ -229,7 +229,6 @@ a {
    ============================================================= */
 .yd-bg     { background: linear-gradient(135deg, var(--d-bg1), var(--d-bg2) 50%, var(--d-bg1)); }
 .yd-card   { background: var(--d-card); border-color: var(--d-border); }
-.yd-header { background: var(--d-header); }
 .yd-input  { background: var(--d-input); border-color: var(--d-border); }
 .yd-soft   { background: var(--d-soft); }
 .yd-border { border-color: var(--d-border); }
@@ -243,7 +242,6 @@ a {
    ============================================================= */
 .yl-bg     { background: linear-gradient(135deg, var(--l-bg1), var(--l-bg2) 55%, var(--l-bg1)); }
 .yl-card   { background: var(--l-card); border-color: var(--l-border); }
-.yl-header { background: var(--l-header); }
 .yl-input  { background: var(--l-input); border-color: var(--l-border); }
 .yl-soft   { background: var(--l-soft); }
 .yl-border { border-color: var(--l-border); }

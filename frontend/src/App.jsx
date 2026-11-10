@@ -723,7 +723,8 @@ export default function App() {
 
   return (
     <div className={`${isDarkMode ? "theme-dark" : "theme-light"} min-h-screen ${bgClass} ${textPrimary}`} style={isDarkMode ? darkVars(pal) : lightVars(lpal)}>
-      <div className={`sticky top-0 z-50 backdrop-blur-xl ${isDarkMode ? 'yd-header shadow-[0_6px_20px_rgba(0,0,0,0.35)]' : 'yl-header shadow-[0_6px_20px_rgba(0,0,0,0.06)]'}`}>
+      {/* Header：透明、不固定、無陰影，直接坐在頁面背景上，和內容融為一體（與底部場景同樣做法） */}
+      <div className="relative z-30">
         <div className="max-w-[1920px] mx-auto px-6 py-3 flex items-center justify-between">
           <Logo isDark={isDarkMode} />
           {/* 夜間模式：英國夜空（彎月、霧雲、飛行表演隊、鳥群）；寬螢幕才顯示 */}
