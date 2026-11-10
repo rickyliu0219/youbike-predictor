@@ -17,7 +17,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
-import { Bike, Clock, MapPin, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar, Sun, CloudFog, CloudRain, CloudLightning } from "lucide-react";
+import { Clock, MapPin, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar, Sun, CloudFog, CloudRain, CloudLightning } from "lucide-react";
 
 // ---------- 常數與小工具 ----------
 const API = "/api";                                   // 後端 API 前綴（經 Vite 代理）
@@ -108,6 +108,48 @@ function ThemeToggle({ isDark, onToggle }) {
   );
 }
 
+// ---------- Logo：字標與自行車融合 ----------
+// "YouBike" 的 o 換成一個帶輻條的車輪，左側速度線表示「移動中」；
+// 滑鼠移到 logo 上時車輪會轉動（.yb-wheel 動畫寫在 index.css）
+function Logo({ isDark }) {
+  const ink = isDark ? "#f8fafc" : "#111827";
+  const sub = isDark ? "#94a3b8" : "#6b7280";
+  const accent = "#f5a524";                 // 車輪與速度線的強調色（日夜模式共用）
+  return (
+    <div className="yb-logo flex items-center gap-3 select-none" aria-label="YouBike 需求預測">
+      <div className="flex items-end leading-none" style={{ color: ink }}>
+        {/* 速度線 */}
+        <svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true" className="mr-1 mb-[3px]">
+          <g stroke={accent} strokeWidth="2.4" strokeLinecap="round">
+            <line x1="6" y1="5" x2="17" y2="5" />
+            <line x1="2" y1="11" x2="17" y2="11" />
+            <line x1="9" y1="17" x2="17" y2="17" />
+          </g>
+        </svg>
+        <span className="text-[26px] font-black tracking-tight">Y</span>
+        {/* 車輪＝字母 o */}
+        <svg viewBox="0 0 24 24" aria-hidden="true" className="yb-wheel mx-[1px]"
+             style={{ width: 21, height: 21, marginBottom: 1 }}>
+          <circle cx="12" cy="12" r="10" fill="none" stroke={accent} strokeWidth="3.2" />
+          <g stroke={accent} strokeWidth="1.3" strokeLinecap="round">
+            <line x1="12" y1="3" x2="12" y2="21" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="5.6" y1="5.6" x2="18.4" y2="18.4" />
+            <line x1="18.4" y1="5.6" x2="5.6" y2="18.4" />
+          </g>
+          <circle cx="12" cy="12" r="2.6" fill={ink} />
+        </svg>
+        <span className="text-[26px] font-black tracking-tight">uBike</span>
+      </div>
+      <div className="h-7 w-px" style={{ background: isDark ? "rgba(255,255,255,0.2)" : "#d1d5db" }} />
+      <div className="leading-tight">
+        <div className="text-[15px] font-bold" style={{ color: ink }}>需求預測</div>
+        <div className="text-[10px] font-semibold tracking-[0.18em] uppercase" style={{ color: sub }}>Demand Forecast</div>
+      </div>
+    </div>
+  );
+}
+
 // ---------- 更新按鈕：與日夜切換開關同風格的圓形擬物按鈕，只放圖示 ----------
 // 滑鼠移入：圖示順時針轉半圈；按下：按鈕凹陷；載入中：圖示持續旋轉
 function RefreshButton({ loading, onClick }) {
@@ -137,7 +179,7 @@ function RefreshButton({ loading, onClick }) {
 
 export default function App() {
   // ===== 畫面狀態 =====
-  const [isDarkMode, setIsDarkMode] = useState(true); // 夜間=深色、日間=黑白
+  const [isDarkMode, setIsDarkMode] = useState(false); // 預設日間（黑白灰）；true＝夜間（深色）
   const [stations, setStations] = useState([]);        // 全部站點清單
   const [stationId, setStationId] = useState("");      // 目前選取的站點
   const [searchText, setSearchText] = useState("");    // 站名／站號搜尋字
@@ -421,7 +463,6 @@ export default function App() {
   const accentColor = isDarkMode ? "text-cyan-300" : "text-gray-900";
   const primaryBtn = isDarkMode ? "bg-cyan-600/80 hover:bg-cyan-600 backdrop-blur-sm" : "bg-black hover:bg-gray-900";
   const inputBg = isDarkMode ? "bg-white/5 border-white/20 backdrop-blur-sm" : "bg-white border-gray-300";
-  const accentGradient = isDarkMode ? "from-cyan-500 to-sky-600" : "from-gray-900 to-gray-700";
 
   // charts（日間顏色→黑灰；夜間維持原樣）
   const chartStroke = {
@@ -488,14 +529,7 @@ export default function App() {
       <div className={`${cardClass} border sticky top-0 z-50 ${isDarkMode ? 'bg-white/5' : 'bg-white'}`}>
         <div className="max-w-[1920px] mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 bg-gradient-to-br ${accentGradient} rounded-xl flex items-center justify-center shadow-lg`}>
-                <Bike className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <div className="text-lg font-bold">YouBike 機器學習預測系統</div>
-              </div>
-            </div>
+            <Logo isDark={isDarkMode} />
             <div className={`h-8 w-px ${isDarkMode ? 'bg-white/20' : 'bg-gray-300'}`} />
             <div className="flex items-center gap-2 text-sm">
               <Clock className="w-4 h-4" />

@@ -94,9 +94,9 @@ if DIST.exists():
     def index():
         return FileResponse(str(DIST / "index.html"))
 
-    @app.get("/vite.svg")
+    @app.get("/favicon.svg")
     def favicon():
-        return FileResponse(str(DIST / "vite.svg"))
+        return FileResponse(str(DIST / "favicon.svg"))
 else:
     @app.get("/")
     def index_dev():

@@ -192,3 +192,9 @@ a {
   .neu-press, .neu-round, .neu-switch .neu-knob, .neu-range::-webkit-slider-thumb { transition: none !important; }
   .neu-press:hover, .neu-round:hover { transform: none; }
 }
+
+/* Logo 車輪：滑鼠移到 logo 上時轉動 */
+.yb-wheel { transform-origin: 50% 50%; }
+.yb-logo:hover .yb-wheel { animation: yb-spin 1.2s linear infinite; }
+@keyframes yb-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .yb-logo:hover .yb-wheel { animation: none; } }
