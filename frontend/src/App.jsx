@@ -17,7 +17,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
-import { Bike, Clock, MapPin, RefreshCw, Loader2, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar, Sun } from "lucide-react";
+import { Bike, Clock, MapPin, RefreshCw, Loader2, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar, Sun, CloudFog, CloudRain, CloudLightning, CircleCheck } from "lucide-react";
 
 // ---------- 常數與小工具 ----------
 const API = "/api";                                   // 後端 API 前綴（經 Vite 代理）
@@ -164,13 +164,15 @@ export default function App() {
     });
   };
 
-  // 一鍵天氣情境
+  // 一鍵天氣情境（目前的降雨＋溫度剛好等於某個情境時，該卡片顯示為選取狀態）
   const presets = [
-    { name: "☀️ 晴", rain_mm: 0, temp: 28 },
-    { name: "☁️ 陰", rain_mm: 0, temp: 24 },
-    { name: "🌧️ 小雨", rain_mm: 0.6, temp: 23 },
-    { name: "⛈️ 大雨", rain_mm: 8, temp: 21 },
+    { name: "晴天", Icon: Sun,            rain_mm: 0,   temp: 28 },
+    { name: "陰天", Icon: Cloud,          rain_mm: 0,   temp: 24 },
+    { name: "霧天", Icon: CloudFog,       rain_mm: 0,   temp: 20 },
+    { name: "雨天", Icon: CloudRain,      rain_mm: 1.5, temp: 23 },
+    { name: "大雨", Icon: CloudLightning, rain_mm: 8,   temp: 21 },
   ];
+  const activePreset = presets.find((p) => p.rain_mm === rainMm && p.temp === tempC)?.name;
 
   // ===== 載入站點清單：先用即時 API，失敗時改用後端本地 CSV =====
   useEffect(() => {
@@ -427,6 +429,25 @@ export default function App() {
     wrapperStyle: { outline: "none" },
   };
 
+  // === 擬物風格小卡（天氣情境）：未選取＝平面淺色；選取＝凸起 + 外框 ===
+  const neuTile = (active) => isDarkMode
+    ? {
+        background: active ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.05)",
+        border: `1.5px solid ${active ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.12)"}`,
+        boxShadow: active
+          ? "3px 3px 8px rgba(0,0,0,0.45), -1px -1px 3px rgba(255,255,255,0.06)"
+          : "inset 1px 1px 3px rgba(0,0,0,0.25)",
+        color: active ? "#f1f5f9" : "#cbd5e1",
+      }
+    : {
+        background: active ? "#fafafa" : "#f3f3f3",
+        border: `1.5px solid ${active ? "#9ca3af" : "#ffffff"}`,
+        boxShadow: active
+          ? "3px 3px 8px rgba(0,0,0,0.14), -2px -2px 6px rgba(255,255,255,0.9)"
+          : "inset 1px 1px 3px rgba(0,0,0,0.05)",
+        color: active ? "#111827" : "#6b7280",
+      };
+
   // === 風險條顏色：低=綠 / 中=橙 / 高=紅（支援日/夜） ===
   const riskBarClass = (level) => {
     const lv = String(level || "").trim();
@@ -446,7 +467,6 @@ export default function App() {
               </div>
               <div>
                 <div className="text-lg font-bold">YouBike 機器學習預測系統</div>
-                <div className={`text-xs ${textSecondary}`}>智慧還車系統</div>
               </div>
             </div>
             <div className={`h-8 w-px ${isDarkMode ? 'bg-white/20' : 'bg-gray-300'}`} />
@@ -471,22 +491,18 @@ export default function App() {
           
           {/* 左側：常用 / 站點 / 天氣 / 時間 */}
           <div className="col-span-12 lg:col-span-3 space-y-6">
-            {/* 常用站點卡片 */}
+            {/* 常用站點卡片：有加入常用（按 ★）才顯示 */}
+            {favorites.length > 0 && (
             <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-sm">常用站點</h3>
-                {favorites.length > 0 && (
-                  <button
-                    onClick={() => { setFavorites([]); localStorage.setItem(LS_FAV_KEY, "[]"); }}
-                    className={`text-xs underline ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}
-                  >
-                    清空
-                  </button>
-                )}
+                <button
+                  onClick={() => { setFavorites([]); localStorage.setItem(LS_FAV_KEY, "[]"); }}
+                  className={`text-xs underline ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}
+                >
+                  清空
+                </button>
               </div>
-              {favorites.length === 0 ? (
-                <div className={`text-xs ${textSecondary}`}>還沒有常用站點，請先在下拉選單選擇站點並按 ⭐ 加入。</div>
-              ) : (
                 <div className="flex flex-wrap gap-2">
                   {favorites
                     .map(fid => stations.find(s => String(s.station_id) === String(fid)))
@@ -508,8 +524,8 @@ export default function App() {
                       </div>
                     ))}
                 </div>
-              )}
             </div>
+            )}
 
             <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
               <div className="flex items-center gap-2 mb-4">
@@ -558,19 +574,32 @@ export default function App() {
                 <Cloud className={`w-5 h-5 ${isDarkMode ? 'text-cyan-300' : 'text-gray-800'}`} />
                 <h3 className="font-bold text-sm">天氣設定</h3>
               </div>
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {presets.map((p) => (
-                  <button key={p.name} onClick={() => { setRainMm(p.rain_mm); setTempC(clamp(p.temp, 0, 50)); }}
-                    className={`px-3 py-2 text-xs rounded-xl font-medium transition shadow ${
-                      isDarkMode
-                        ? 'bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20'
-                        : 'bg-gray-100 hover:bg-gray-200 border border-gray-300'
-                    }`}>
-                    {p.name}
-                  </button>
-                ))}
+              {/* 天氣情境卡片：圖示在上、文字在下；選取中的卡片凸起並顯示勾勾 */}
+              <div className="grid grid-cols-5 gap-2 mb-5">
+                {presets.map((p) => {
+                  const { name, rain_mm, temp } = p;
+                  const active = activePreset === name;
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => { setRainMm(rain_mm); setTempC(clamp(temp, 0, 50)); }}
+                      className="flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 transition-all duration-200"
+                      style={neuTile(active)}
+                    >
+                      <p.Icon className="w-5 h-5" strokeWidth={1.6} />
+                      <span className={`text-[11px] ${active ? 'font-bold' : 'font-medium'}`}>{name}</span>
+                      {/* 勾勾位置固定保留，避免選取時卡片高度跳動 */}
+                      <CircleCheck className={`w-3.5 h-3.5 transition-opacity ${active ? 'opacity-100' : 'opacity-0'}`}
+                        style={{ color: isDarkMode ? '#4ade80' : '#16a34a' }} strokeWidth={2} />
+                    </button>
+                  );
+                })}
               </div>
-              <div className="space-y-3">
+
+              {/* 溫度／降雨滑桿（樣式見 index.css 的 .neu-range；--pct 控制已填滿長度） */}
+              <div className="space-y-4">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1 text-xs">
@@ -580,7 +609,8 @@ export default function App() {
                     <span className="text-xs font-mono">{tempC}°C</span>
                   </div>
                   <input type="range" min="0" max="50" step="0.1" value={tempC}
-                    onChange={(e) => setTempC(Number(e.target.value))} className="w-full h-1" />
+                    onChange={(e) => setTempC(Number(e.target.value))}
+                    className="neu-range" style={{ "--pct": `${(tempC / 50) * 100}%` }} />
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -591,7 +621,8 @@ export default function App() {
                     <span className="text-xs font-mono">{rainMm}mm</span>
                   </div>
                   <input type="range" min="0" max="20" step="0.1" value={rainMm}
-                    onChange={(e) => setRainMm(Number(e.target.value))} className="w-full h-1" />
+                    onChange={(e) => setRainMm(Number(e.target.value))}
+                    className="neu-range" style={{ "--pct": `${(rainMm / 20) * 100}%` }} />
                 </div>
               </div>
             </div>
@@ -771,13 +802,12 @@ export default function App() {
                 <div className="space-y-2 text-sm">
                   <div className={`flex justify-between p-2 rounded-lg ${isDarkMode ? 'bg-green-400/10' : 'bg-gray-50'}`}>
                     <span>vs 機車</span>
-                    <span className="font-bold">-{eco.saveScooter.toFixed(1)} kg</span>
+                    <span className="font-bold">-{eco.saveScooter.toFixed(1)} kg CO₂</span>
                   </div>
                   <div className={`flex justify-between p-2 rounded-lg ${isDarkMode ? 'bg-green-400/10' : 'bg-gray-50'}`}>
                     <span>vs 汽車</span>
-                    <span className="font-bold">-{eco.saveCar.toFixed(1)} kg</span>
+                    <span className="font-bold">-{eco.saveCar.toFixed(1)} kg CO₂</span>
                   </div>
-                  <div className={`text-xs ${textSecondary} text-center mt-2`}>CO₂ 減量估算</div>
                 </div>
               </div>
             </div>

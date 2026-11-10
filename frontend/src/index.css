@@ -103,3 +103,43 @@ a {
   background-color: #ffffff;
   color: #000000;
 }
+/* =============================================================
+   擬物風格滑桿（溫度／降雨），與日間夜間切換開關同一套視覺語言
+   - 軌道：內凹膠囊；已填滿的部分用 --pct（0–100%）控制
+   - 旋鈕：凸起的白色圓形
+   ============================================================= */
+.neu-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 14px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+  background: linear-gradient(to right, var(--fill) 0%, var(--fill) var(--pct), var(--track) var(--pct), var(--track) 100%);
+  border: 2px solid var(--edge);
+  box-shadow: inset 2px 2px 4px var(--in-dark), inset -2px -2px 4px var(--in-light);
+}
+.theme-light .neu-range { --track: #ececec; --fill: #9a9a9a; --edge: #ffffff; --in-dark: rgba(0,0,0,.12); --in-light: rgba(255,255,255,.9); }
+.theme-dark  .neu-range { --track: #3a3a3a; --fill: #8a8a8a; --edge: rgba(255,255,255,.85); --in-dark: rgba(0,0,0,.45); --in-light: rgba(255,255,255,.04); }
+
+.neu-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #ffffff, #e3e3e3);
+  box-shadow: 2px 2px 6px rgba(0,0,0,.28), -1px -1px 3px rgba(255,255,255,.8);
+  transition: transform .15s ease;
+}
+.neu-range::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #ffffff, #e3e3e3);
+  box-shadow: 2px 2px 6px rgba(0,0,0,.28), -1px -1px 3px rgba(255,255,255,.8);
+}
+.neu-range:active::-webkit-slider-thumb { transform: scale(1.08); }
+.neu-range:focus-visible { box-shadow: 0 0 0 3px rgba(34,211,238,.5); }
