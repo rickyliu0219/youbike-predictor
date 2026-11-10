@@ -47,10 +47,12 @@ function FlyTo({ center }) {
 
 function TheMap({ isDark, center, accent, nearby, onSelect, zoom = 16, interactive = true }) {
   const tiles = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+  // 主題 class 放在外層 div：MapContainer 掛載後不會再更新 className，切換日夜時才會生效
   return (
+    <div className={`h-full w-full ${isDark ? "yb-map-dark" : "yb-map-light"}`}>
     <MapContainer
       center={center} zoom={zoom} scrollWheelZoom={interactive} zoomControl={interactive}
-      attributionControl className={`h-full w-full ${isDark ? "yb-map-dark" : "yb-map-light"}`}
+      attributionControl className="h-full w-full"
     >
       <TileLayer url={tiles} maxZoom={19}
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
@@ -64,6 +66,7 @@ function TheMap({ isDark, center, accent, nearby, onSelect, zoom = 16, interacti
       ))}
       <Marker position={center} icon={pinIcon(accent)} zIndexOffset={1000} />
     </MapContainer>
+    </div>
   );
 }
 
