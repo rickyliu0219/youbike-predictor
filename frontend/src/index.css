@@ -353,3 +353,42 @@ a {
   display: flex; align-items: center; padding: 0 6px;
   transition: opacity .2s ease;
 }
+
+/* =============================================================
+   日間拉普蘭雪國（components/NordicSky.jsx、NordicScene.jsx）
+   ============================================================= */
+.ns-sky, .ns-scene { animation: yb-fadein .8s ease-out; }
+/* 雪花：top 控制落下、translateX 控制左右晃，兩個動畫互不干擾 */
+.ns-flake {
+  top: -6px; background: #fff; box-shadow: 0 0 0 .5px rgba(140,160,180,.45);
+  animation-name: ns-fall, ns-sway; animation-timing-function: linear, ease-in-out;
+  animation-iteration-count: infinite, infinite; animation-direction: normal, alternate;
+}
+@keyframes ns-fall { from { top: -6px; } to { top: 100%; } }
+@keyframes ns-sway { from { transform: translateX(calc(var(--sway) * -1)); } to { transform: translateX(var(--sway)); } }
+.ns-sun-glow { animation: ns-breathe 6s ease-in-out infinite; }
+@keyframes ns-breathe { 0%,100% { transform: scale(1); opacity: .8; } 50% { transform: scale(1.12); opacity: 1; } }
+
+/* 馴鹿：走路時四腳交替、身體起伏；吃草時低頭 */
+.nr-leg, .nr-head { transform-box: fill-box; }
+.nr-leg { transform-origin: 50% 0; }
+.nr-head { transform-origin: 0% 100%; transition: transform .6s ease; }
+.nr-deer[data-walking="1"] .nr-leg-a { animation: nr-leg .55s ease-in-out infinite alternate; }
+.nr-deer[data-walking="1"] .nr-leg-b { animation: nr-leg .55s ease-in-out infinite alternate-reverse; }
+.nr-deer[data-walking="1"] .nr-body  { animation: lg-bob .28s ease-in-out infinite alternate; }
+.nr-deer[data-grazing="1"] .nr-head  { transform: rotate(62deg) translate(3px, 7px); }
+@keyframes nr-leg { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
+
+/* 煙囪煙：往上飄、變大、淡出 */
+.nc-smoke { transform-box: fill-box; transform-origin: center; animation: nc-smoke 3.9s ease-out infinite; opacity: 0; }
+@keyframes nc-smoke {
+  0%   { transform: translate(0, 0) scale(.6); opacity: 0; }
+  15%  { opacity: .9; }
+  100% { transform: translate(10px, -22px) scale(1.8); opacity: 0; }
+}
+.nc-window { animation: lg-glow 5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ns-flake, .ns-sun-glow, .nc-smoke, .nr-deer * { animation: none !important; }
+  .ns-flake { display: none; }
+}

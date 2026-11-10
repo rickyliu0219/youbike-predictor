@@ -4,16 +4,12 @@
 //
 // 場景：遠方倫敦眼與城市剪影、星星閃爍、大笨鐘（時鐘指針＝現在時間）、
 //       煤氣路燈（暖光微微閃動）、紅色電話亭
-// 衛兵：用 requestAnimationFrame 驅動的簡單狀態機
-//   - walk  ：以行軍速度走向隨機目標點（雙腳擺動、身體上下起伏）
-//   - idle  ：立正站崗 1.5–4.5 秒，偶爾原地向後轉
-//   - 30% 機率改成「定點巡邏」：在目前位置附近來回踱步
+// 衛兵：走向隨機位置（雙腳擺動、身體起伏）→ 立正站崗、偶爾向後轉 → 有時定點來回巡邏
+//       狀態機在 useWanderer.js，與日間模式的馴鹿共用
 // 顏色採低飽和暖色，配合「暖炭」主題；系統開啟「減少動態效果」時衛兵只站崗不走動
 // =============================================================
 import React, { useEffect, useRef, useState } from "react";
-
-const SPEED = 24;          // 行走速度（px/秒）
-const EDGE = 26;           // 左右保留邊界（px）
+import useWanderer from "./useWanderer";
 
 // ---------- 衛兵（原創扁平風格，面向右） ----------
 function Guard() {
@@ -109,58 +105,8 @@ export default function LondonScene({ className = "" }) {
     return () => clearInterval(t);
   }, []);
 
-  // 衛兵狀態機
-  useEffect(() => {
-    const wrap = wrapRef.current, guard = guardRef.current;
-    if (!wrap || !guard) return;
-    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    const rand = (a, b) => a + Math.random() * (b - a);
-    const width = () => wrap.clientWidth;
-
-    const st = { x: width() * 0.4, dir: 1, mode: "idle", until: performance.now() + 1200, target: 0, patrol: null };
-    const render = () => {
-      guard.style.transform = `translateX(${st.x}px)`;
-      guard.dataset.walking = st.mode === "walk" ? "1" : "0";
-      guard.firstChild.style.transform = `scaleX(${st.dir})`;
-    };
-    render();
-    if (reduce) return;
-
-    let raf, last = performance.now();
-    const tick = (t) => {
-      const dt = Math.min(0.05, (t - last) / 1000); last = t;
-      const W = width();
-      if (st.mode === "idle" && t > st.until) {
-        // 選下一個目標：定點巡邏（在附近 40–70px 來回）或走到隨機位置
-        if (st.patrol && st.patrol.left > 0) {
-          st.target = st.patrol.flip ? st.patrol.a : st.patrol.b;
-          st.patrol.flip = !st.patrol.flip; st.patrol.left -= 1;
-        } else if (Math.random() < 0.3) {
-          const a = Math.max(EDGE, st.x - rand(20, 35)), b = Math.min(W - EDGE, st.x + rand(20, 35));
-          st.patrol = { a, b, flip: false, left: 3 + Math.floor(rand(0, 3)) };
-          st.target = b;
-        } else {
-          st.patrol = null;
-          do { st.target = rand(EDGE, W - EDGE); } while (Math.abs(st.target - st.x) < 50 && W > 160);
-        }
-        st.dir = st.target > st.x ? 1 : -1;
-        st.mode = "walk";
-      } else if (st.mode === "walk") {
-        st.x += st.dir * SPEED * dt;
-        if ((st.dir > 0 && st.x >= st.target) || (st.dir < 0 && st.x <= st.target)) {
-          st.x = st.target;
-          st.mode = "idle";
-          st.until = t + (st.patrol ? rand(600, 1400) : rand(1500, 4500));
-          if (!st.patrol && Math.random() < 0.35) st.dir *= -1;   // 原地向後轉
-        }
-      }
-      st.x = Math.max(EDGE, Math.min(W - EDGE, st.x));
-      render();
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
+  // 衛兵走動（共用狀態機，見 useWanderer.js）
+  useWanderer(wrapRef, guardRef, { speed: 24, edge: 26 });
 
   return (
     <div ref={wrapRef} className={`lg-scene relative h-[60px] overflow-hidden pointer-events-none select-none ${className}`} aria-hidden="true">

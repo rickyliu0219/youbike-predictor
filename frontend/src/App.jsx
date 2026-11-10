@@ -23,6 +23,8 @@ import { shortName } from "./utils";
 import StationMap from "./components/StationMap";
 import LondonScene from "./components/LondonScene";
 import LondonSky from "./components/LondonSky";
+import NordicSky from "./components/NordicSky";
+import NordicScene from "./components/NordicScene";
 
 // ---------- 常數與小工具 ----------
 const API = "/api";                                   // 後端 API 前綴（經 Vite 代理）
@@ -724,8 +726,9 @@ export default function App() {
       <div className={`sticky top-0 z-50 backdrop-blur-xl ${isDarkMode ? 'yd-header shadow-[0_6px_20px_rgba(0,0,0,0.35)]' : 'yl-header shadow-[0_6px_20px_rgba(0,0,0,0.06)]'}`}>
         <div className="max-w-[1920px] mx-auto px-6 py-3 flex items-center justify-between">
           <Logo isDark={isDarkMode} />
-          {/* 夜間模式限定：英國夜空（彎月、霧雲、飛行表演隊、鳥群），寬螢幕才顯示 */}
-          {isDarkMode ? <div className="hidden md:flex flex-1 min-w-0"><LondonSky /></div> : <div className="flex-1" />}
+          {/* 夜間模式：英國夜空（彎月、霧雲、飛行表演隊、鳥群）；寬螢幕才顯示 */}
+          {/* 日間模式：拉普蘭雪國天空（細雪、冬陽） */}
+          <div className="hidden md:flex flex-1 min-w-0">{isDarkMode ? <LondonSky key="sky-dark" /> : <NordicSky key="sky-light" />}</div>
           <div className="flex items-center gap-3">
             <ThemeToggle isDark={isDarkMode} onToggle={() => setIsDarkMode(!isDarkMode)} />
             <RefreshButton loading={loadingAll} onClick={runAll} />
@@ -1029,16 +1032,15 @@ export default function App() {
         </div>
       </div>
 
-      {/* 夜間模式限定：頁面底部的倫敦街景＋巡邏衛兵（放大 1.7 倍；寬螢幕才顯示） */}
-      {isDarkMode && (
-        <div className="hidden md:block relative mt-8 max-w-[1920px] mx-auto px-6" style={{ height: 60 * SCENE_SCALE }}>
-          <div className="absolute bottom-0 left-6" style={{ width: `calc((100% - 48px) / ${SCENE_SCALE})`, transform: `scale(${SCENE_SCALE})`, transformOrigin: "left bottom" }}>
-            <LondonScene />
-          </div>
+      {/* 頁面底部場景（放大 SCENE_SCALE 倍；寬螢幕才顯示）
+          夜間：倫敦街景＋巡邏衛兵；日間：拉普蘭雪國＋漫步的馴鹿 */}
+      <div className="hidden md:block relative mt-8 max-w-[1920px] mx-auto px-6" style={{ height: 60 * SCENE_SCALE }}>
+        <div className="absolute bottom-0 left-6" style={{ width: `calc((100% - 48px) / ${SCENE_SCALE})`, transform: `scale(${SCENE_SCALE})`, transformOrigin: "left bottom" }}>
+          {isDarkMode ? <LondonScene key="scene-dark" /> : <NordicScene key="scene-light" />}
         </div>
-      )}
+      </div>
 
-      <div className={`${cardClass} border-t ${isDarkMode ? "mt-0" : "mt-10"}`}>
+      <div className={`${cardClass} border-t`}>
         <div className="max-w-[1920px] mx-auto px-6 py-4">
           <div className="flex items-center justify-end text-xs">
             <div className={textSecondary}>© 2025 YouBike 需求預測 | 由劉禹寬製作</div>
