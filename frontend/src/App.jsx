@@ -730,7 +730,10 @@ export default function App() {
           {/* 夜間模式：英國夜空（彎月、霧雲、飛行表演隊、鳥群）；寬螢幕才顯示 */}
           {/* 日間模式：拉普蘭雪國天空（細雪、冬陽） */}
           <div className="hidden md:flex flex-1 min-w-0">{isDarkMode ? <LondonSky key="sky-dark" /> : <NordicSky key="sky-light" />}</div>
-          <div className="flex items-center gap-3">
+          {/* 佔位：按鈕浮在右上角（fixed），這裡保留同樣寬度，避免天空裝飾跑到按鈕底下 */}
+          <div className="shrink-0 w-[204px]" aria-hidden="true" />
+          {/* 日夜切換＋更新：固定浮在右上角，往下捲也按得到 */}
+          <div className="fixed top-3 right-6 z-50 flex items-center gap-3">
             <ThemeToggle isDark={isDarkMode} onToggle={() => setIsDarkMode(!isDarkMode)} />
             <RefreshButton loading={loadingAll} onClick={runAll} />
           </div>
