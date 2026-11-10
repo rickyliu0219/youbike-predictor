@@ -21,6 +21,7 @@ import { Clock, MapPin, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calen
 import StationPicker from "./components/StationPicker";
 import { shortName } from "./utils";
 import StationMap from "./components/StationMap";
+import LondonScene from "./components/LondonScene";
 
 // ---------- 常數與小工具 ----------
 const API = "/api";                                   // 後端 API 前綴（經 Vite 代理）
@@ -721,6 +722,8 @@ export default function App() {
       <div className={`sticky top-0 z-50 backdrop-blur-xl ${isDarkMode ? 'yd-header shadow-[0_6px_20px_rgba(0,0,0,0.35)]' : 'yl-header shadow-[0_6px_20px_rgba(0,0,0,0.06)]'}`}>
         <div className="max-w-[1920px] mx-auto px-6 py-3 flex items-center justify-between">
           <Logo isDark={isDarkMode} />
+          {/* 夜間模式限定：倫敦夜景＋巡邏衛兵（寬螢幕才顯示） */}
+          {isDarkMode ? <div className="hidden md:flex flex-1 min-w-0"><LondonScene /></div> : <div className="flex-1" />}
           <div className="flex items-center gap-3">
             <ThemeToggle isDark={isDarkMode} onToggle={() => setIsDarkMode(!isDarkMode)} />
             <RefreshButton loading={loadingAll} onClick={runAll} />

@@ -282,3 +282,31 @@ a {
 .theme-dark .leaflet-control-zoom a { background: var(--d-card); color: var(--d-text); border-color: var(--d-border); }
 .theme-dark .leaflet-control-attribution { background: rgba(0,0,0,.4); color: #aaa; }
 .theme-dark .leaflet-control-attribution a { color: #ccc; }
+
+/* =============================================================
+   夜間倫敦場景（components/LondonScene.jsx）
+   ============================================================= */
+.lg-scene { animation: yb-fadein .8s ease-out; }
+.lg-guard { will-change: transform; }
+
+/* 走路：雙腳交替擺動、左手擺動、身體微微上下 */
+.lg-leg, .lg-arm { transform-box: fill-box; transform-origin: 50% 0; }
+.lg-guard[data-walking="1"] .lg-leg-a { animation: lg-leg .5s ease-in-out infinite alternate; }
+.lg-guard[data-walking="1"] .lg-leg-b { animation: lg-leg .5s ease-in-out infinite alternate-reverse; }
+.lg-guard[data-walking="1"] .lg-arm   { animation: lg-arm .5s ease-in-out infinite alternate-reverse; }
+.lg-guard[data-walking="1"] .lg-body  { animation: lg-bob .25s ease-in-out infinite alternate; }
+@keyframes lg-leg { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
+@keyframes lg-arm { from { transform: rotate(-22deg); } to { transform: rotate(18deg); } }
+@keyframes lg-bob { from { transform: translateY(0); } to { transform: translateY(-1px); } }
+
+/* 星星閃爍、鐘面發光、路燈閃動 */
+.lg-star { width: 2px; height: 2px; background: rgba(255,236,214,.7); animation: lg-twinkle 3.2s ease-in-out infinite; }
+@keyframes lg-twinkle { 0%,100% { opacity: .15; } 50% { opacity: .85; } }
+.lg-glow { animation: lg-glow 4s ease-in-out infinite; }
+@keyframes lg-glow { 0%,100% { opacity: .8; } 50% { opacity: 1; } }
+.lg-flicker { animation: lg-flicker 5s steps(1) infinite; }
+@keyframes lg-flicker { 0%,100% { opacity: 1; } 42% { opacity: .82; } 44% { opacity: 1; } 71% { opacity: .9; } 72% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-star, .lg-glow, .lg-flicker, .lg-guard * { animation: none !important; }
+}
