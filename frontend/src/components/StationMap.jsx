@@ -1,9 +1,10 @@
 // src/components/StationMap.jsx
 // =============================================================
-// 站點地圖卡片（Leaflet + CARTO 底圖，免 API 金鑰）
+// 站點地圖卡片（Leaflet + OpenStreetMap 底圖，免 API 金鑰）
 //
 // - 選定站點以主題色大頭針標示；周邊 800 m 內其他站點以小圓點顯示，點一下即可切換站點
-// - 底圖隨日／夜模式切換（CARTO Positron / Dark Matter），並套用濾鏡讓色調貼近主題
+// - 底圖用 OpenStreetMap 標準圖磚，再以 CSS 濾鏡依日／夜模式調成低飽和、貼近主題的色調
+//   （夜間用反相＋色相旋轉做出深色地圖；CARTO 等深色底圖現在需要 API 金鑰）
 // - 「一鍵導航」：開啟 Google 地圖步行路線（手機上會直接跳 Google Maps App）
 // - 「放大」：全螢幕檢視，Esc 或點背景關閉
 // =============================================================
@@ -45,16 +46,14 @@ function FlyTo({ center }) {
 }
 
 function TheMap({ isDark, center, accent, nearby, onSelect, zoom = 16, interactive = true }) {
-  const tiles = isDark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  const tiles = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
   return (
     <MapContainer
       center={center} zoom={zoom} scrollWheelZoom={interactive} zoomControl={interactive}
       attributionControl className={`h-full w-full ${isDark ? "yb-map-dark" : "yb-map-light"}`}
     >
-      <TileLayer key={tiles} url={tiles} subdomains="abcd" maxZoom={20}
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>' />
+      <TileLayer url={tiles} maxZoom={19}
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
       <FlyTo center={center} />
       {nearby.map((s) => (
         <CircleMarker key={s.station_id} center={[s.lat, s.lon]} radius={6}
