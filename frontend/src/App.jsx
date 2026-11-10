@@ -17,7 +17,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
-import { Bike, Clock, MapPin, RefreshCw, Loader2, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar } from "lucide-react";
+import { Bike, Clock, MapPin, RefreshCw, Loader2, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar, Sun } from "lucide-react";
 
 // ---------- 常數與小工具 ----------
 const API = "/api";                                   // 後端 API 前綴（經 Vite 代理）
@@ -40,6 +40,73 @@ const getHour = (val) => {
   const m = /^(\d{2}):(\d{2})$/.exec(tail);
   return m ? Number(m[1]) : NaN;
 };
+
+// ---------- 日間／夜間切換開關（擬物風格膠囊開關）----------
+// 日間：白色軌道、旋鈕在右（太陽）、文字在左
+// 夜間：深灰軌道、旋鈕在左（月亮）、文字在右
+// 旋鈕以 translateX 滑動，軌道底色與文字以 transition 漸變
+function ThemeToggle({ isDark, onToggle }) {
+  const W = 148, H = 44, PAD = 4, KNOB = H - PAD * 2;   // 尺寸（px）
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isDark}
+      aria-label={isDark ? "切換為日間模式" : "切換為夜間模式"}
+      onClick={onToggle}
+      className="relative shrink-0 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+      style={{
+        width: W,
+        height: H,
+        background: isDark ? "#4b4b4b" : "#f7f7f7",
+        // 外框白邊 + 內凹陰影，做出「嵌在面板裡」的立體感
+        border: "2px solid #ffffff",
+        boxShadow: isDark
+          ? "inset 2px 2px 5px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.35)"
+          : "inset 2px 2px 5px rgba(0,0,0,0.10), inset -2px -2px 5px rgba(255,255,255,0.9), 0 2px 6px rgba(0,0,0,0.12)",
+      }}
+    >
+      {/* 模式文字：日間在左、夜間在右 */}
+      <span
+        className="absolute top-1/2 -translate-y-1/2 text-[11px] font-extrabold leading-[1.05] tracking-wide text-left transition-all duration-300 select-none"
+        style={{
+          left: isDark ? KNOB + PAD + 14 : 16,
+          color: isDark ? "#c8c8c8" : "#9a9a9a",
+        }}
+      >
+        {isDark ? <>NIGHT<br />MODE</> : <>LIGHT<br />MODE</>}
+      </span>
+
+      {/* 旋鈕：凸起的白色圓形，內含太陽／月亮 */}
+      <span
+        className="absolute top-1/2 rounded-full flex items-center justify-center transition-transform duration-300 ease-out"
+        style={{
+          left: PAD - 2,
+          width: KNOB,
+          height: KNOB,
+          transform: `translate(${isDark ? 0 : W - KNOB - PAD * 2}px, -50%)`,
+          background: "linear-gradient(145deg, #ffffff, #e6e6e6)",
+          boxShadow: "2px 2px 6px rgba(0,0,0,0.25), -1px -1px 3px rgba(255,255,255,0.8)",
+        }}
+      >
+        {isDark
+          ? (
+            // 細彎月：大圓減去往右偏移的圓（mask），開口朝右
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+              <defs>
+                <mask id="yb-crescent">
+                  <rect width="20" height="20" fill="white" />
+                  <circle cx="13.5" cy="10" r="7" fill="black" />
+                </mask>
+              </defs>
+              <circle cx="10" cy="10" r="8" fill="#a3a3a3" mask="url(#yb-crescent)" />
+            </svg>
+          )
+          : <Sun className="w-[18px] h-[18px]" style={{ color: "#8f8f8f" }} strokeWidth={2} />}
+      </span>
+    </button>
+  );
+}
 
 export default function App() {
   // ===== 畫面狀態 =====
@@ -389,16 +456,7 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium shadow-lg transition ${
-                isDarkMode
-                  ? 'bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20'
-                  : 'bg-gray-100 hover:bg-gray-200 border border-gray-300'
-              }`}
-            >
-              {isDarkMode ? '🌙 夜間' : '☀️ 日間'}
-            </button>
+            <ThemeToggle isDark={isDarkMode} onToggle={() => setIsDarkMode(!isDarkMode)} />
             <button onClick={runAll} disabled={loadingAll}
               className={`px-4 py-2 ${primaryBtn} text-white rounded-xl flex items-center gap-2 text-sm font-medium disabled:opacity-50 shadow-lg transition`}>
               {loadingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
