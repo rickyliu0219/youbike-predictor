@@ -1040,9 +1040,8 @@ export default function App() {
 
       <div className={`${cardClass} border-t ${isDarkMode ? "mt-0" : "mt-10"}`}>
         <div className="max-w-[1920px] mx-auto px-6 py-4">
-          <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center justify-end text-xs">
             <div className={textSecondary}>© 2025 YouBike 需求預測 | 由劉禹寬製作</div>
-            <div className={textSecondary}>僅供比賽創意用途 · 不保證預測準確性 · 不承擔法律責任</div>
           </div>
         </div>
       </div>

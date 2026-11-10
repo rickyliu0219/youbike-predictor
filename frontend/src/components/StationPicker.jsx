@@ -9,7 +9,7 @@
 //   * 清單最多一次渲染 200 筆，輸入關鍵字即可縮小範圍
 // =============================================================
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, Search, Star, MapPin } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Search, Star, MapPin } from "lucide-react";
 
 const MAX_ROWS = 200;
 import { shortName } from "../utils";
@@ -73,6 +73,47 @@ export default function StationPicker({ isDark, stations, value, onChange, favor
     el?.scrollIntoView({ block: "nearest" });
   }, [cursor, open]);
 
+  // ---- 行政區晶片列的捲動 ----
+  // 桌機滑鼠滾輪只會垂直捲動，這裡把垂直滾動轉成水平；也支援按住拖曳與左右箭頭
+  const chipsRef = useRef(null);
+  const dragged = useRef(false);
+  const [chipEdge, setChipEdge] = useState({ left: false, right: false });
+  const fadeBg = isDark ? "var(--d-card)" : "var(--l-card)";
+  const updateChipEdge = () => {
+    const el = chipsRef.current; if (!el) return;
+    setChipEdge({ left: el.scrollLeft > 4, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 });
+  };
+  useEffect(() => { if (open) requestAnimationFrame(updateChipEdge); }, [open, districts.length]);
+  // React 的 onWheel 是被動監聽，無法 preventDefault，所以這裡另外綁原生事件
+  useEffect(() => {
+    const el = chipsRef.current; if (!el) return;
+    const onWheel = (e) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;   // 觸控板本來就能橫向滑
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [open]);
+  const scrollChips = (dir) => chipsRef.current?.scrollBy({ left: dir * 160, behavior: "smooth" });
+  const onChipsDown = (e) => {
+    if (e.pointerType !== "mouse") return;                    // 觸控本來就能滑
+    const el = chipsRef.current, startX = e.clientX, startLeft = el.scrollLeft;
+    dragged.current = false;
+    const move = (ev) => {
+      const dx = ev.clientX - startX;
+      if (Math.abs(dx) > 4) dragged.current = true;
+      el.scrollLeft = startLeft - dx;
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      setTimeout(() => { dragged.current = false; }, 0);      // 拖曳結束後的那次 click 不算選取
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+
   const pick = (s) => { onChange(String(s.station_id)); setOpen(false); setQ(""); };
 
   const onKey = (e) => {
@@ -134,18 +175,31 @@ export default function StationPicker({ isDark, stations, value, onChange, favor
             </div>
           </div>
 
-          {/* 行政區晶片（橫向捲動） */}
-          <div className="yb-chips flex gap-1.5 px-3 pb-2 overflow-x-auto">
+          {/* 行政區晶片（橫向捲動）：滑鼠滾輪／拖曳／左右箭頭都能捲 */}
+          <div className="relative">
+          <button type="button" aria-label="往左捲動" onClick={() => scrollChips(-1)}
+            className={`yb-chip-arrow left-0 ${chipEdge.left ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            style={{ background: `linear-gradient(90deg, ${fadeBg} 55%, transparent)` }}>
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button type="button" aria-label="往右捲動" onClick={() => scrollChips(1)}
+            className={`yb-chip-arrow right-0 justify-end ${chipEdge.right ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            style={{ background: `linear-gradient(270deg, ${fadeBg} 55%, transparent)` }}>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+          <div ref={chipsRef} onScroll={updateChipEdge} onPointerDown={onChipsDown}
+            className="yb-chips flex gap-1.5 px-3 pb-2 overflow-x-auto cursor-grab active:cursor-grabbing">
             {districts.map((d) => {
               const on = d === district;
               return (
-                <button key={d} type="button" onClick={() => { setDistrict(d); setCursor(0); }}
+                <button key={d} type="button" onClick={() => { if (dragged.current) return; setDistrict(d); setCursor(0); }}
                   className={`neu-press shrink-0 px-2.5 py-1 rounded-full text-[11px] border ${on ? "font-bold" : t.sub} ${t.border}`}
                   style={on ? { background: accentVar, color: isDark ? "#1a1714" : "#ffffff", borderColor: "transparent" } : undefined}>
                   {d}
                 </button>
               );
             })}
+          </div>
           </div>
 
           {/* 清單 */}
