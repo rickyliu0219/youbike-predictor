@@ -131,7 +131,6 @@ export default function StationMap({ isDark, station, stations, onSelect, accent
           </div>
 
           {station.address && <div className={`mt-3 text-xs ${t.sub}`}>{station.address}</div>}
-          <div className={`mt-1 text-[11px] ${t.sub}`}>周邊 {NEARBY_M} m 內還有 {nearby.length} 個站點（放大後可點選切換）</div>
 
           {/* 一鍵導航 */}
           <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
