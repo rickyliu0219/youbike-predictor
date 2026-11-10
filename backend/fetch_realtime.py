@@ -19,6 +19,16 @@ import mysql.connector
 URL = "https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json"
 
 
+def parse_mday(s: str) -> datetime:
+    """官方時間格式改過：新版 "2026-11-10 20:52:04"，舊版 "20261110205204"，兩種都支援。"""
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y%m%d%H%M%S"):
+        try:
+            return datetime.strptime(s, fmt)
+        except ValueError:
+            pass
+    raise ValueError(f"無法解析時間：{s}")
+
+
 def save_realtime():
     # 1) 下載整份即時資料（約 1,600 個站點）
     r = requests.get(URL, timeout=15)
@@ -43,10 +53,11 @@ def save_realtime():
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """, (
             row["sno"], row["sarea"], row["sna"],
-            row.get("total", row.get("quantity")),   # 官方欄位名稱曾改版，兩種都相容
+            # 官方欄位名稱曾改版（Quantity / quantity / total），全部相容
+            row.get("Quantity", row.get("quantity", row.get("total"))),
             row["available_rent_bikes"], row["available_return_bikes"],
             row["latitude"], row["longitude"],
-            datetime.strptime(row["mday"], "%Y%m%d%H%M%S"),
+            parse_mday(row["mday"]),
         ))
     conn.commit()
     conn.close()

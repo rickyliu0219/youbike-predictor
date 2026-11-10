@@ -141,13 +141,18 @@ def _fetch_realtime_rows() -> List[Dict]:
         sno = str(r.get("sno") or "").strip()
         if not sno:
             continue
+        rent_n = int(r.get("available_rent_bikes") or 0)
+        ret_n = int(r.get("available_return_bikes") or 0)
+        # 車柱總數：官方欄位名稱改過好幾次（Quantity / quantity / total），全部相容；
+        # 都沒有時用「可借 + 可還」估算
+        docks = int(r.get("Quantity") or r.get("quantity") or r.get("total") or 0) or (rent_n + ret_n)
         rows.append({
             "station_id": sno,
             "station_name": r.get("sna") or "",
             "district": r.get("sarea") or "",
-            "docks_total": int(r.get("quantity") or 0),
-            "available_rent_bikes": int(r.get("available_rent_bikes") or 0),
-            "available_return_bikes": int(r.get("available_return_bikes") or 0),
+            "docks_total": docks,
+            "available_rent_bikes": rent_n,
+            "available_return_bikes": ret_n,
             "lat": float(r.get("latitude") or 0.0),
             "lon": float(r.get("longitude") or 0.0),
             "update_time": r.get("updateTime") or r.get("mday") or "",
