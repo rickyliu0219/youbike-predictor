@@ -57,15 +57,15 @@
 
 ## Quick Start｜快速開始（Windows）
 
-Requires **Python 3.10+** and **Node.js 18+**.　需求：Python 3.10 以上、Node.js 18 以上。
+Only **Python 3.10+** is required — the pre-built web UI (`frontend/dist`) is served by the backend.<br>
+只需要 **Python 3.10 以上**；打包好的網頁（`frontend/dist`）由後端直接提供，不必安裝 Node.js。
 
 ```bat
-:: 1. First-time setup: creates venv\ and installs backend + frontend packages
-::    第一次安裝：建立 venv 並安裝前後端套件
+:: 1. First-time setup: creates venv\ and installs packages
+::    第一次安裝：建立 venv 並安裝套件
 setup.bat
 
-:: 2. Start backend (8000) + frontend (5173); opens the browser automatically
-::    啟動後端與前端，會自動開啟瀏覽器
+:: 2. Start; opens the browser automatically　啟動，會自動開啟瀏覽器
 start.bat
 
 :: 3. Stop everything　關閉所有服務
@@ -74,8 +74,11 @@ stop.bat
 
 | Service | URL |
 |---|---|
-| Web dashboard 前端 | http://localhost:5173 |
+| Web dashboard 網頁 | http://127.0.0.1:8000 |
 | API docs (Swagger) 後端文件 | http://127.0.0.1:8000/docs |
+
+**Frontend development 前端開發** — with Node.js 18+ installed, `setup.bat` also installs the frontend packages and `start.bat` runs the Vite dev server with hot reload at http://localhost:5173. Run `npm run build` in `frontend/` to refresh `dist/`.<br>
+若有安裝 Node.js 18+，`setup.bat` 會一併安裝前端套件，`start.bat` 會改開 Vite 熱更新（http://localhost:5173）；修改前端後在 `frontend/` 執行 `npm run build` 更新 `dist/`。
 
 If [`cloudflared`](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) is installed, `start.bat` also opens a temporary public URL for demos.<br>
 若有安裝 cloudflared，`start.bat` 會另外開一個臨時外網網址，方便現場展示。
@@ -86,8 +89,7 @@ If [`cloudflared`](https://developers.cloudflare.com/cloudflare-one/connections/
 ```bash
 python3 -m venv venv && source venv/bin/activate
 pip install -r backend/requirements.txt
-cd backend && uvicorn main:app --port 8000 &      # backend
-cd ../frontend && npm ci && npm run dev           # frontend → http://localhost:5173
+cd backend && uvicorn main:app --port 8000        # → http://127.0.0.1:8000
 ```
 </details>
 
@@ -117,7 +119,8 @@ youbike-predictor/
 │   ├── fetch_realtime.py    # (optional) archive live data into MySQL
 │   └── requirements.txt
 ├── frontend/                # React 19 + Vite + Tailwind 4 + Recharts
-│   └── src/App.jsx          # dashboard UI
+│   ├── src/App.jsx          # dashboard UI
+│   └── dist/                # pre-built UI served by the backend
 ├── data/
 │   ├── stations.csv         # station list fallback
 │   ├── youbike_hourly_sim.csv   # hourly training data (simulated)

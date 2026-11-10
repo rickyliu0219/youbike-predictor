@@ -73,13 +73,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 若有打包的前端，順手伺服
+
+# 前端一律呼叫 /api/xxx：
+#   - 開發模式由 Vite 代理把 /api 拿掉再轉給後端
+#   - 「免 Node.js 模式」由後端直接提供 frontend/dist，這裡同樣把 /api 前綴拿掉
+# 兩種模式前端程式碼完全相同。
+@app.middleware("http")
+async def strip_api_prefix(request, call_next):
+    path = request.scope["path"]
+    if path == "/api" or path.startswith("/api/"):
+        request.scope["path"] = path[4:] or "/"
+    return await call_next(request)
+
+
+# 若有打包好的前端（frontend/dist），後端直接提供網頁 → 只裝 Python 就能使用
 if DIST.exists():
     app.mount("/assets", StaticFiles(directory=str(DIST / "assets")), name="assets")
 
     @app.get("/")
     def index():
         return FileResponse(str(DIST / "index.html"))
+
+    @app.get("/vite.svg")
+    def favicon():
+        return FileResponse(str(DIST / "vite.svg"))
 else:
     @app.get("/")
     def index_dev():

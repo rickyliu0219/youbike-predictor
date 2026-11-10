@@ -275,6 +275,7 @@ export default function App() {
   //   缺車風險 = 1 − 可借車數 / 容量；滿車風險 = 1 − 空位數 / 容量
   //   ≥ 0.75 → 高、≥ 0.45 → 中、其餘 → 低
   const risk = useMemo(() => {
+    if (!realtime) return null;   // 沒有即時車數就不評估（否則會誤判成 0 台車 → 高風險）
     const capFromRt = Number(realtime?.remain_bikes || 0) + Number(realtime?.remain_slots || 0);
     const cap = Number(realtime?.capacity || capFromRt || selectedStation?.docks_total || 0);
     if (!cap) return null;

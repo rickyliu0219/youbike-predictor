@@ -1,9 +1,15 @@
+# Python
 __pycache__/
 *.py[cod]
 venv/
 .venv/
+
+# Node
 node_modules/
-dist/
+# 注意：frontend/dist（打包好的網頁）刻意提交，讓沒有 Node.js 的人也能直接使用
+
+# 其他
 .vscode/
-.DS_Store.env
+.DS_Store
+.env
 *.log
