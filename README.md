@@ -14,7 +14,7 @@
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white)
 
-<img src="docs/screenshot-dark.png" width="100%" alt="Dashboard (dark mode)">
+<img src="docs/screenshot-light.png" width="100%" alt="Dashboard (light mode · Lapland theme)">
 
 </div>
 
@@ -38,10 +38,12 @@
 | ⚠️ | Stock-out & full-station risk levels | 缺車／滿車風險等級 |
 | 🌱 | CO₂ savings estimate vs scooter / car | 相較機車、汽車的 CO₂ 減量估算 |
 | ⭐ | Favorite stations (saved in browser) | 常用站點（存在瀏覽器） |
-| 🌗 | Dark / light theme | 夜間／日間主題 |
+| 🌗 | Light (Nordic · Lapland) / dark (warm charcoal · London) themes with animated scenes | 日間（北歐・拉普蘭雪國）／夜間（暖炭・倫敦夜景）主題與動畫場景 |
+| 🔎 | Themed station picker: search, district chips, favorites first, keyboard nav | 主題化站點選單：搜尋、行政區篩選、常用置頂、鍵盤操作 |
+| 🗺️ | Station map with nearby stations and one-tap Google Maps navigation | 站點地圖、周邊站點、一鍵 Google 地圖導航 |
 | 🛟 | Falls back to local CSV / heuristic if API or model is unavailable | API 或模型不可用時自動改用本地資料／經驗公式 |
 
-<img src="docs/screenshot-light.png" width="100%" alt="Dashboard (light mode)">
+<img src="docs/screenshot-dark.png" width="100%" alt="Dashboard (dark mode · London theme)">
 
 ## Architecture｜系統架構
 
@@ -104,6 +106,9 @@ cd backend && uvicorn main:app --port 8000        # → http://127.0.0.1:8000
 | GET | `/stations/search?q=` | Search by name / ID 站名站號搜尋 |
 | POST | `/predict_one` | Single-hour prediction 單一時間點預測 |
 | POST | `/forecast_day` | Windowed forecast + remaining bikes 視窗預報＋剩餘車數 |
+
+Set `YOUBIKE_URL` to point the backend at a saved JSON snapshot for offline demos.<br>
+設定環境變數 `YOUBIKE_URL` 可改讀本機的即時資料快照（離線展示用）。
 
 ```bash
 curl -X POST http://127.0.0.1:8000/forecast_day \

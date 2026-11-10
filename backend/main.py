@@ -21,6 +21,7 @@ from __future__ import annotations
 from typing import Optional, List, Dict, Tuple
 
 import math
+import os
 import time
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -57,7 +58,11 @@ RENT_MODEL_PATH = BASE / "rf_rent_model_quick.pkl"
 RETURN_MODEL_PATH = BASE / "rf_return_model_quick.pkl"
 STATIONS_CSV = DATA / "stations.csv"
 
-YOUBIKE_TPE_URL = "https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json"
+# 台北市 YouBike 2.0 即時資料；可用環境變數 YOUBIKE_URL 改成本機快照（離線展示用）
+YOUBIKE_TPE_URL = os.getenv(
+    "YOUBIKE_URL",
+    "https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json",
+)
 
 # -----------------------------
 # FastAPI
