@@ -31,9 +31,10 @@
 | | EN | 中文 |
 |---|---|---|
 | 📡 | Live bikes / empty docks / capacity per station | 即時可借車數、可停車格、總容量 |
-| 📈 | 6h / 12h / today / tomorrow / day-after forecast | 6 小時、12 小時、今日、明日、後日預測 |
+| 📈 | Hourly forecast for today / tomorrow / the day after | 今日、明日、後日逐小時預測 |
+| 🕒 | Timeline slider: sky panel changes with time of day, shows that hour's prediction | 時間軸滑桿：天空面板隨時段變色，顯示該小時預測值 |
 | 🔋 | Remaining-bike simulation bounded by dock capacity | 依車柱容量上下限推算剩餘車數 |
-| 🌧️ | Weather what-if: presets + rain / temperature sliders | 天氣情境模擬（晴／陰／小雨／大雨＋滑桿） |
+| 🌧️ | Weather what-if: presets + rain / temperature sliders | 天氣情境模擬（晴天／陰天／霧天／雨天／大雨＋滑桿） |
 | ⚠️ | Stock-out & full-station risk levels | 缺車／滿車風險等級 |
 | 🌱 | CO₂ savings estimate vs scooter / car | 相較機車、汽車的 CO₂ 減量估算 |
 | ⭐ | Favorite stations (saved in browser) | 常用站點（存在瀏覽器） |

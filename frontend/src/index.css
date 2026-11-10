@@ -198,3 +198,28 @@ a {
 .yb-logo:hover .yb-wheel { animation: yb-spin 1.2s linear infinite; }
 @keyframes yb-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .yb-logo:hover .yb-wheel { animation: none; } }
+
+/* =============================================================
+   時間設定卡片的切換動畫
+   ============================================================= */
+/* 數字切換：由下往上淡入、略微彈跳 */
+.yb-pop { animation: yb-pop .35s cubic-bezier(.2,.9,.3,1.3); }
+@keyframes yb-pop {
+  from { opacity: 0; transform: translateY(6px) scale(.96); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+/* 文字切換：由右往左滑入 */
+.yb-slide-in { animation: yb-slide .35s ease-out; }
+@keyframes yb-slide {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+/* 太陽／月亮切換：旋轉放大進場 */
+.yb-icon-in { animation: yb-icon .55s cubic-bezier(.2,.9,.3,1.2); }
+@keyframes yb-icon {
+  from { opacity: 0; transform: rotate(-90deg) scale(.4); }
+  to   { opacity: 1; transform: rotate(0)      scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yb-pop, .yb-slide-in, .yb-icon-in { animation: none; }
+}

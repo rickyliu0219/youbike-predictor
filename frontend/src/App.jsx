@@ -15,9 +15,9 @@
 // =============================================================
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, PieChart, Pie, Cell
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine, BarChart, Bar, PieChart, Pie, Cell
 } from "recharts";
-import { Clock, MapPin, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar, Sun, CloudFog, CloudRain, CloudLightning } from "lucide-react";
+import { Clock, MapPin, AlertTriangle, Leaf, Cloud, Droplets, Thermometer, Calendar, Sun, CloudFog, CloudRain, CloudLightning, Moon, Sunrise, Sunset } from "lucide-react";
 
 // ---------- 常數與小工具 ----------
 const API = "/api";                                   // 後端 API 前綴（經 Vite 代理）
@@ -141,10 +141,128 @@ function Logo({ isDark }) {
         </svg>
         <span className="text-[26px] font-black tracking-tight">uBike</span>
       </div>
-      <div className="h-7 w-px" style={{ background: isDark ? "rgba(255,255,255,0.2)" : "#d1d5db" }} />
       <div className="leading-tight">
         <div className="text-[15px] font-bold" style={{ color: ink }}>需求預測</div>
         <div className="text-[10px] font-semibold tracking-[0.18em] uppercase" style={{ color: sub }}>Demand Forecast</div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- 時間軸：依小時決定時段名稱、天空顏色與圖示 ----------
+const DAY_PERIODS = [
+  { from: 0,  to: 4,  label: "深夜 / 凌晨", sky: "#1c2541", Icon: Moon },
+  { from: 5,  to: 6,  label: "清晨 / 日出", sky: "#c07a63", Icon: Sunrise },
+  { from: 7,  to: 10, label: "上午",        sky: "#3d7fb0", Icon: Sun },
+  { from: 11, to: 13, label: "中午",        sky: "#3a8bc9", Icon: Sun },
+  { from: 14, to: 16, label: "下午",        sky: "#4a7eab", Icon: Sun },
+  { from: 17, to: 18, label: "傍晚 / 日落", sky: "#b0614c", Icon: Sunset },
+  { from: 19, to: 23, label: "夜間",        sky: "#1f3358", Icon: Moon },
+];
+const periodOf = (h) => DAY_PERIODS.find((p) => h >= p.from && h <= p.to) || DAY_PERIODS[0];
+const WEEK = ["日", "一", "二", "三", "四", "五", "六"];
+const pad2 = (n) => String(n).padStart(2, "0");
+
+// ---------- 時間設定卡片（參考「時間軸天氣模擬」設計）----------
+// 1. 上方三張日期卡：今日／明日／後日（切換預測的那一天）
+// 2. 中間天空面板：模擬時間、時段名稱、太陽／月亮；背景色隨時段漸變，數字切換時有進場動畫
+// 3. 下方時間軸滑桿 00:00–23:00，可拖曳或點刻度；選到的小時會同步標在預測折線圖上
+function TimeCard({ isDark, cardClass, neuTile, now, view, setView, hour, setHour, atHour }) {
+  const period = periodOf(hour);
+  const PIcon = period.Icon;
+  const days = [["today", "今日", 0], ["tomorrow", "明日", 1], ["dayafter", "後日", 2]].map(([k, label, off]) => {
+    const d = new Date(now.getTime() + off * 86400000);
+    return { k, label, md: `${d.getMonth() + 1}/${d.getDate()}`, wd: WEEK[d.getDay()] };
+  });
+  const sel = days.find((d) => d.k === view) || days[0];
+  const nowHour = now.getHours();
+  const isNow = view === "today" && hour === nowHour;
+  const fmt = (v) => (v === null || v === undefined ? "—" : v);
+
+  return (
+    <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
+      {/* 標題列：右側是即時時鐘，點擊可跳回「現在」 */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Calendar className={`w-5 h-5 ${isDark ? "text-cyan-300" : "text-gray-800"}`} />
+          <h3 className="font-bold text-sm">時間設定</h3>
+        </div>
+        <button
+          type="button"
+          onClick={() => { setView("today"); setHour(nowHour); }}
+          title="回到現在"
+          className="neu-press flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
+          style={neuTile(isNow)}
+        >
+          <Clock className="w-3 h-3" />
+          現在 {pad2(now.getHours())}:{pad2(now.getMinutes())}
+        </button>
+      </div>
+
+      {/* 日期切換 */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {days.map((d) => {
+          const active = d.k === view;
+          return (
+            <button key={d.k} type="button" aria-pressed={active} onClick={() => setView(d.k)}
+              className="neu-press rounded-2xl py-2 flex flex-col items-center leading-tight" style={neuTile(active)}>
+              <span className={`text-xs ${active ? "font-bold" : "font-medium"}`}>{d.label}</span>
+              <span className="text-[10px] opacity-70 tabular-nums">{d.md}（{d.wd}）</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 天空面板：背景色依時段漸變 */}
+      <div
+        className="relative overflow-hidden rounded-2xl px-4 py-3.5 text-white"
+        style={{
+          backgroundColor: period.sky,
+          transition: "background-color .7s ease",
+          boxShadow: isDark
+            ? "inset 0 1px 0 rgba(255,255,255,.12), 0 4px 14px rgba(0,0,0,.35)"
+            : "inset 0 1px 0 rgba(255,255,255,.25), 0 4px 14px rgba(0,0,0,.15)",
+        }}
+      >
+        {/* 光暈：讓面板有一點天空層次 */}
+        <div className="pointer-events-none absolute -top-10 -right-8 w-40 h-40 rounded-full"
+             style={{ background: "radial-gradient(circle, rgba(255,255,255,.22), transparent 70%)" }} />
+        <div className="relative flex items-start justify-between">
+          <div>
+            <div key={view} className="yb-slide-in text-[11px] opacity-80">模擬時間 · {sel.md}（{sel.wd}）</div>
+            <div key={`h${hour}`} className="yb-pop text-[34px] leading-none font-bold tabular-nums mt-1.5">
+              {pad2(hour)}:00
+            </div>
+            <div key={period.label} className="yb-slide-in text-xs font-semibold mt-2 opacity-90">{period.label}</div>
+          </div>
+          <PIcon key={period.label + "i"} className="yb-icon-in w-9 h-9" style={{ color: "#fde68a" }} strokeWidth={1.8} />
+        </div>
+        {/* 該小時的預測值（來自折線圖資料） */}
+        <div className="relative mt-3 grid grid-cols-3 gap-2 text-center">
+          {[["借出", atHour?.rent], ["歸還", atHour?.ret], ["剩餘", atHour?.remain]].map(([k, v]) => (
+            <div key={k} className="rounded-xl py-1.5" style={{ background: "rgba(255,255,255,.14)" }}>
+              <div className="text-[10px] opacity-80">{k}</div>
+              <div key={`${k}${hour}${view}`} className="yb-pop text-sm font-bold tabular-nums">{fmt(v)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 時間軸 */}
+      <div className="mt-4">
+        <input type="range" min="0" max="23" step="1" value={hour}
+          onChange={(e) => setHour(Number(e.target.value))}
+          aria-label="模擬時間"
+          className="neu-range" style={{ "--pct": `${(hour / 23) * 100}%` }} />
+        <div className="relative h-4 mt-1.5 text-[10px] tabular-nums opacity-70">
+          {[0, 6, 12, 18, 23].map((h) => (
+            <button key={h} type="button" onClick={() => setHour(h)}
+              className="absolute -translate-x-1/2 hover:opacity-100 hover:font-bold transition"
+              style={{ left: `calc(12px + (100% - 24px) * ${h / 23})` }}>
+              {pad2(h)}:00
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -184,13 +302,13 @@ export default function App() {
   const [stationId, setStationId] = useState("");      // 目前選取的站點
   const [searchText, setSearchText] = useState("");    // 站名／站號搜尋字
   const [districtFilter, setDistrictFilter] = useState("全部");
-  const [date, setDate] = useState(() => nowInTaipei().date);
-  const [time, setTime] = useState(() => nowInTaipei().time);
+  const [now, setNow] = useState(() => new Date());                // 即時時鐘（每 20 秒更新）
+  const [simHour, setSimHour] = useState(() => new Date().getHours()); // 時間軸選到的小時（0–23）
   // 天氣條件（送給後端當模型特徵）
   const [rainMm, setRainMm] = useState(0);             // 降雨量 mm
   const [isRain, setIsRain] = useState(0);             // 是否下雨（由 rainMm 自動同步）
   const [tempC, setTempC] = useState(26);              // 氣溫 °C
-  const [rangeView, setRangeView] = useState("today"); // 預測視窗：next6 / next12 / today / tomorrow / dayafter
+  const [rangeView, setRangeView] = useState("today"); // 預測哪一天：today / tomorrow / dayafter
   const [realtime, setRealtime] = useState(null);      // 即時車數
   const [series, setSeries] = useState([]);            // 逐小時預測結果 [{hour, rent, ret, remain}]
   const [loadingAll, setLoadingAll] = useState(false);
@@ -330,7 +448,7 @@ export default function App() {
     try {
       const body = {
         station_id: Number(stationId),
-        date,
+        date: nowInTaipei().date,
         view: rangeView,
         rain_mm: Number(rainMm),
         is_rain: Number(isRain),
@@ -386,7 +504,19 @@ export default function App() {
     clearTimeout(deb.current);
     deb.current = setTimeout(runAll, 250);
     return () => clearTimeout(deb.current);
-  }, [stationId, date, time, rainMm, isRain, tempC, rangeView]);
+  }, [stationId, rainMm, isRain, tempC, rangeView]);   // 拖時間軸只在前端查表，不重打 API
+
+  // 即時時鐘：每 20 秒更新一次（時間設定卡片右上角顯示）
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 20000);
+    return () => clearInterval(t);
+  }, []);
+
+  // 時間軸選到的那一小時，在預測序列中的資料（給天空面板與折線圖參考線用）
+  const atHour = useMemo(
+    () => series.find((r) => getHour(r?.hour) === simHour) || null,
+    [series, simHour]
+  );
 
   // 時段加總：早上 6–9、中午 12–13、晚上 16–18、整個視窗
   const aggregates = useMemo(() => {
@@ -461,7 +591,6 @@ export default function App() {
   const textPrimary = isDarkMode ? "text-white" : "text-gray-900";
   const textSecondary = isDarkMode ? "text-slate-300" : "text-gray-600";
   const accentColor = isDarkMode ? "text-cyan-300" : "text-gray-900";
-  const primaryBtn = isDarkMode ? "bg-cyan-600/80 hover:bg-cyan-600 backdrop-blur-sm" : "bg-black hover:bg-gray-900";
   const inputBg = isDarkMode ? "bg-white/5 border-white/20 backdrop-blur-sm" : "bg-white border-gray-300";
 
   // charts（日間顏色→黑灰；夜間維持原樣）
@@ -526,16 +655,9 @@ export default function App() {
 
   return (
     <div className={`${isDarkMode ? "theme-dark" : "theme-light"} min-h-screen ${bgClass} ${textPrimary}`}>
-      <div className={`${cardClass} border sticky top-0 z-50 ${isDarkMode ? 'bg-white/5' : 'bg-white'}`}>
+      <div className={`sticky top-0 z-50 backdrop-blur-xl ${isDarkMode ? 'bg-slate-950/70 shadow-[0_6px_20px_rgba(0,0,0,0.35)]' : 'bg-white/85 shadow-[0_6px_20px_rgba(0,0,0,0.06)]'}`}>
         <div className="max-w-[1920px] mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Logo isDark={isDarkMode} />
-            <div className={`h-8 w-px ${isDarkMode ? 'bg-white/20' : 'bg-gray-300'}`} />
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4" />
-              <span>{date} {time}</span>
-            </div>
-          </div>
+          <Logo isDark={isDarkMode} />
           <div className="flex items-center gap-3">
             <ThemeToggle isDark={isDarkMode} onToggle={() => setIsDarkMode(!isDarkMode)} />
             <RefreshButton loading={loadingAll} onClick={runAll} />
@@ -681,31 +803,8 @@ export default function App() {
               </div>
             </div>
 
-            <div className={`${cardClass} border rounded-2xl p-5 shadow-xl`}>
-              <div className="flex items-center gap-2 mb-4">
-                <Calendar className={`w-5 h-5 ${isDarkMode ? 'text-cyan-300' : 'text-gray-800'}`} />
-                <h3 className="font-bold text-sm">時間設定</h3>
-              </div>
-              <div className="space-y-3">
-                <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                  className={`w-full px-3 py-2 text-sm rounded-xl border ${inputBg} ${textPrimary}`} />
-                <input type="time" value={time} onChange={(e) => setTime(e.target.value)}
-                  className={`w-full px-3 py-2 text-sm rounded-xl border ${inputBg} ${textPrimary}`} />
-              </div>
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                {[["next6", "6小時"], ["next12", "12小時"], ["today", "今日"], ["tomorrow", "明日"], ["dayafter", "後日"]].map(([k, label]) => (
-                  <button key={k} onClick={() => setRangeView(k)}
-                    className={`neu-press px-2 py-1.5 text-xs rounded-xl font-medium shadow ${
-                      rangeView === k ? `${primaryBtn} text-white`
-                      : isDarkMode
-                        ? 'bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20'
-                        : 'bg-gray-100 hover:bg-gray-200 border border-gray-300'
-                    }`}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <TimeCard isDark={isDarkMode} cardClass={cardClass} neuTile={neuTile} now={now}
+              view={rangeView} setView={setRangeView} hour={simHour} setHour={setSimHour} atHour={atHour} />
           </div>
 
           {/* 中間：即時、預測、時段 */}
@@ -756,7 +855,7 @@ export default function App() {
               </div>
               <div className="h-80">
                 <ResponsiveContainer>
-                  <LineChart data={series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <LineChart data={series} margin={{ top: 22, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={chartStroke.grid} />
                     <XAxis dataKey="hour" stroke={chartStroke.axis} tick={{ fontSize: 11 }} />
                     <YAxis yAxisId="flow" stroke={chartStroke.axis} tick={{ fontSize: 11 }} />
@@ -769,6 +868,11 @@ export default function App() {
                       wrapperStyle={tooltipStyle.wrapperStyle}
                     />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
+                    {/* 時間軸選到的小時 */}
+                    {atHour && (
+                      <ReferenceLine yAxisId="flow" x={atHour.hour} stroke="#f5a524" strokeWidth={2} strokeDasharray="4 4"
+                        label={{ value: atHour.hour.slice(-5), position: "top", fill: "#f5a524", fontSize: 11 }} />
+                    )}
                     <Line yAxisId="flow" type="monotone" dataKey="rent" name="借車" stroke={chartStroke.rent} strokeWidth={3} dot={false} />
                     <Line yAxisId="flow" type="monotone" dataKey="ret" name="還車" stroke={chartStroke.ret} strokeWidth={3} dot={false} />
                     <Line yAxisId="remain" type="monotone" dataKey="remain" name="剩餘" stroke={chartStroke.remain} strokeWidth={2} dot={false} strokeDasharray="5 5" />
